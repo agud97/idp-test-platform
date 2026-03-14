@@ -492,8 +492,8 @@ func writeDeprecationReport(records []tracker.LegacyEnvironment) (string, error)
 	builder.WriteString(fmt.Sprintf("- Generated at: %s\n", time.Now().UTC().Format(time.RFC3339)))
 	builder.WriteString(fmt.Sprintf("- Operator: %s\n", operator))
 	builder.WriteString(fmt.Sprintf("- Total environments: %d\n\n", len(records)))
-	builder.WriteString("| Team | Environment | Completed At | Target Environment ID |\n")
-	builder.WriteString("|------|-------------|--------------|-----------------------|\n")
+	builder.WriteString("| Environment ID | Team | Environment | Completed At | Target Environment ID |\n")
+	builder.WriteString("|----------------|------|-------------|--------------|-----------------------|\n")
 	for _, record := range records {
 		completedAt := ""
 		if record.CompletedAt.Valid {
@@ -503,7 +503,7 @@ func writeDeprecationReport(records []tracker.LegacyEnvironment) (string, error)
 		if record.TargetEnvironmentID.Valid {
 			target = fmt.Sprintf("%d", record.TargetEnvironmentID.Int64)
 		}
-		builder.WriteString(fmt.Sprintf("| %s | %s | %s | %s |\n", record.TeamName, record.Name, completedAt, target))
+		builder.WriteString(fmt.Sprintf("| %d | %s | %s | %s | %s |\n", record.ID, record.TeamName, record.Name, completedAt, target))
 	}
 
 	if err := os.WriteFile(filepath.Clean(reportPath), []byte(builder.String()), 0o644); err != nil {

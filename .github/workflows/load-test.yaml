@@ -2,10 +2,39 @@ name: Load Test
 
 on:
   workflow_dispatch:
+    inputs:
+      branch:
+        description: "Git branch to run the load test against"
+        required: true
+        default: "feature/phase-1-foundation"
 
 jobs:
   load-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Placeholder
-        run: echo "Load test workflow will be implemented in phase 5."
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22.12"
+
+      - name: Write kubeconfig
+        env:
+          KUBECONFIG_B64: ${{ secrets.LOAD_TEST_KUBECONFIG_B64 }}
+        run: |
+          test -n "$KUBECONFIG_B64"
+          echo "$KUBECONFIG_B64" | base64 -d > "$RUNNER_TEMP/kubeconfig"
+          echo "KUBECONFIG=$RUNNER_TEMP/kubeconfig" >> "$GITHUB_ENV"
+
+      - name: Run 50-environment load test
+        env:
+          LOAD_TEST_COUNT: "50"
+          LOAD_TEST_PUSH_EACH_COMMIT: "true"
+        run: go test ./tests/load/... -run TestConcurrency -v -timeout 90m

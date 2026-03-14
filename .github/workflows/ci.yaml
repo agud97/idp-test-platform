@@ -78,3 +78,50 @@ jobs:
       - name: Skip empty crossplane tree
         if: steps.compositions.outputs.present != 'true'
         run: echo "No Crossplane compositions present yet; skipping validation."
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Kubescape
+        run: |
+          curl -fsSL https://github.com/kubescape/kubescape/releases/download/v4.0.2/kubescape_4.0.2_linux_amd64 -o kubescape
+          chmod +x kubescape
+          sudo mv kubescape /usr/local/bin/kubescape
+
+      - name: Scan platform manifests
+        run: kubescape scan platform/ --format json --output kubescape-platform.json
+
+      - name: Fail on CRITICAL findings
+        run: |
+          python3 - <<'PY'
+          import json
+          import sys
+
+          files = ["kubescape-platform.json"]
+          failures = []
+          for path in files:
+              with open(path) as fh:
+                  data = json.load(fh)
+              summary = data.get("summaryDetails", {})
+              resource_critical = summary.get("resourcesSeverityCounters", {}).get("criticalSeverity", 0)
+              control_critical = summary.get("controlsSeverityCounters", {}).get("criticalSeverity", 0)
+              if resource_critical or control_critical:
+                  failures.append(f"{path}: resources={resource_critical} controls={control_critical}")
+          if failures:
+              print("CRITICAL findings detected:")
+              for failure in failures:
+                  print(failure)
+              sys.exit(1)
+          print("Kubescape scan passed with zero CRITICAL findings.")
+          PY
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22.12"
+
+      - name: Run security tests
+        run: go test ./tests/security/... -v

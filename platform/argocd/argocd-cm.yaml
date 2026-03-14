@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  resource.customizations.health.argoproj.io_Application: |
+    hs = {}
+    if obj.status ~= nil and obj.status.operationState ~= nil then
+      local op = obj.status.operationState
+      if op.phase == "Error" or op.phase == "Failed" then
+        hs.status = "Degraded"
+        hs.message = op.message or ""
+        return hs
+      end
+      if op.syncResult ~= nil and op.syncResult.resources ~= nil then
+        for _, res in ipairs(op.syncResult.resources) do
+          if res.status == "SyncFailed" then
+            hs.status = "Degraded"
+            hs.message = res.message or op.message or "sync failed"
+            return hs
+          end
+        end
+      end
+    end
+
+    if obj.status ~= nil and obj.status.health ~= nil and obj.status.health.status ~= nil then
+      hs.status = obj.status.health.status
+      hs.message = obj.status.health.message or ""
+      return hs
+    end
+
+    hs.status = "Progressing"
+    hs.message = ""
+    return hs

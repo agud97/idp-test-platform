@@ -1,8 +1,8 @@
 # Implementation Status: IDP Test Environment Platform
 
 ## Current Position
-- Phase: phase-2.7
-- Task: task-2.7.5
+- Phase: phase-5
+- Task: task-5.6
 - Status: COMPLETE
 
 ## Progress
@@ -58,12 +58,12 @@
 ### Phase 5: Acceptance Testing & Hardening
 | Task     | Status        | Notes |
 |----------|---------------|-------|
-| task-5.1 | NOT_STARTED | Deferred until phase-2.7 is implemented because lifecycle acceptance tests require a real Environment -> child composite provisioning path. |
-| task-5.2 | NOT_STARTED | |
-| task-5.3 | NOT_STARTED | |
-| task-5.4 | NOT_STARTED | |
-| task-5.5 | NOT_STARTED | |
-| task-5.6 | NOT_STARTED | |
+| task-5.1 | COMPLETE | Added root `go.mod` plus `tests/acceptance/lifecycle_test.go`; `go test ./tests/acceptance/... -run TestLifecycle -v` now passes live for AC-001, AC-003, AC-005, AC-006, AC-007, and AC-008 using a temporary git-clone harness against the cluster, with AC-001 logged at 86 seconds on the latest run. |
+| task-5.2 | COMPLETE | Added `tests/acceptance/components_test.go`; `go test ./tests/acceptance/... -run TestComponents -v` now passes live for AC-004, AC-009, AC-010, AC-011, AC-013, AC-015, AC-016, and AC-018, validating replica overrides, image tag override, database provisioning/removal, invalid replica bounds, and absence of password literals in ConfigMap data or deployment `env[].value`. |
+| task-5.3 | COMPLETE | Added `tests/acceptance/gitops_test.go`; `go test ./tests/acceptance/... -run TestGitOps -v` now passes live for AC-019, AC-037, AC-038, AC-039, AC-040, AC-041, and AC-042 using the actual ownership model of this platform: ArgoCD restores deleted or modified `Environment` claims, direct `kubectl apply` drift on the claim is reverted, Git audit history is verified, and pod-to-pod traffic is allowed only within the same environment namespace while cross-namespace traffic times out. |
+| task-5.4 | COMPLETE | Added `tests/acceptance/migration_test.go`; `go test ./tests/acceptance/... -run TestMigration -v` now passes for AC-052, AC-053, AC-055, AC-059, and AC-073 through AC-080 by validating compose conversion output, export redaction, legacy registration errors, migration completion gates, and deprecation report generation against a temporary tracker DB. |
+| task-5.5 | COMPLETE | Added `.github/workflows/ci.yaml` security-scan job plus `tests/security/credential_scan_test.go` and `tests/security/netpol_test.go`; `go test ./tests/security/... -v` passes, `kubescape scan platform/` reports zero CRITICAL findings, and the credential audit now fails on literal secret-like key/value pairs under `environments/`. |
+| task-5.6 | COMPLETE | Added `tests/load/concurrency_test.go` and completed `.github/workflows/load-test.yaml`; after fixing explicit kubeconfig handling, create-phase polling, and teardown batching, a live `LOAD_TEST_COUNT=50 go test ./tests/load/... -run TestConcurrency -v -timeout 90m` passed on the 3-node cluster with per-environment timings between 2m24s and 3m16s and cleanup pruning all load-test namespaces. |
 
 ## Checkpoints
 | Phase   | Status      | Approved |
@@ -73,7 +73,7 @@
 | phase-2.7 | REACHED | |
 | phase-3 | REACHED | |
 | phase-4 | REACHED | |
-| phase-5 | NOT_REACHED | |
+| phase-5 | REACHED | |
 
 ## Blockers
 
