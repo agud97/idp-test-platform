@@ -2,7 +2,7 @@ backstage:
   image:
     registry: ghcr.io
     repository: agud97/idp-test-platform/backstage-oidc
-    tag: phase-4-task-4-3-r2
+    tag: phase-4-task-4-3-r3
     pullSecrets:
       - ghcr-pull
   extraEnvVars:

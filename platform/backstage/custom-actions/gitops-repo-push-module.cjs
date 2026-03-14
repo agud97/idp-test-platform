@@ -71,7 +71,7 @@ function createGithubRepoUpsertAction(options) {
         throw new InputError(`Invalid repository target ${repoUrl}`);
       }
 
-      const token = providedToken || (await githubCredentialsProvider.getCredentials({
+      const token = providedToken || process.env.GITHUB_TOKEN || (await githubCredentialsProvider.getCredentials({
         url: `https://${host}/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,
       })).token;
 
