@@ -471,21 +471,29 @@ plan:
             claim spec.
 
         - id: task-2.7.3
-          name: "Crossplane ProviderConfig and package wiring"
+          name: "Crossplane provider, function, and runtime package wiring"
           description: >
-            Add the repo-hosted Crossplane provider manifests required by the
-            existing and new Compositions, including a Provider and
-            ProviderConfig named `kubernetes-provider`. Ensure all repo-hosted
-            Compositions have the providerConfigRef they require and that the
-            provider is installed by GitOps rather than imperative kubectl
-            commands.
-          artifact: "platform/crossplane/provider-kubernetes.yaml"
+            Add the repo-hosted Crossplane runtime manifests required by the
+            existing and new pipeline Compositions, including:
+            (1) a Provider and ProviderConfig named `kubernetes-provider`,
+            (2) the Crossplane Function packages referenced by repo-hosted
+            Compositions, and
+            (3) any provider runtime RBAC needed for provider-managed objects.
+            Ensure all repo-hosted Compositions have the providerConfigRef and
+            Function references they require and that these runtime packages are
+            installed by GitOps rather than imperative kubectl commands.
+          artifact: >
+            platform/crossplane/provider-kubernetes.yaml +
+            platform/crossplane/functions.yaml +
+            platform/crossplane/provider-kubernetes-rbac.yaml
           depends_on: [task-2.4]
           validation: >
             `kubectl apply --dry-run=client -f platform/crossplane/` exits 0.
-            On the cluster, `kubectl get provider.pkg.crossplane.io` and
+            On the cluster, `kubectl get provider.pkg.crossplane.io`,
+            `kubectl get functions.pkg.crossplane.io`, and
             `kubectl get providerconfig.kubernetes.crossplane.io` show the
-            expected provider and `kubernetes-provider` ProviderConfig.
+            expected provider, Functions, and `kubernetes-provider`
+            ProviderConfig.
 
         - id: task-2.7.4
           name: "GitOps deploy repo-hosted Crossplane definitions"
@@ -494,7 +502,9 @@ plan:
             Application becomes multi-source: it must keep the upstream chart
             source and additionally deploy the repo-hosted CRDs, XRDs,
             Compositions, EnvironmentConfig, and ProviderConfig manifests from
-            platform/crds/ and platform/crossplane/. Also update
+            platform/crds/ and platform/crossplane/. Before enabling the sync,
+            make any required schema-alignment fixes to existing repo-hosted
+            XRDs so they are valid for the live Crossplane API version. Also update
             appset-environments.yaml so committed Environment claims are applied
             into a stable control namespace rather than the workload namespace;
             the Environment Composition creates the workload namespace itself.
@@ -745,13 +755,19 @@ plan:
             team, component selections with enabled toggle, imageTag overrides),
             uses ${{ values.* }} substitution syntax, renders skeleton YAML
             at skeleton/environments/${{ values.team }}/${{ values.env_name }}.yaml,
-            commits generated file to Git via publish:github action,
-            registers the new environment in catalog via catalog:register.
+            commits generated file to Git, and registers the new environment in
+            the catalog. Because this repository's Backstage runtime uses a
+            static/file-backed catalog, the task also includes whatever catalog
+            registration and runtime scaffolder action wiring is required so the
+            template is actually discoverable and can update the existing GitOps
+            branch safely.
             Parameters must be typed (string/integer/boolean) and stored
             in template_yaml + parameters fields per entity_model.md.
           artifact: >
             templates/new-environment/template.yaml +
-            templates/new-environment/skeleton/environments/.../env.yaml
+            templates/new-environment/skeleton/environments/.../env.yaml +
+            catalog/all-components.yaml +
+            platform/backstage/custom-actions/gitops-repo-push-module.cjs
           depends_on: [task-1.2, task-4.2]
           validation: >
             In Backstage, fill the New Environment form with valid values
@@ -770,8 +786,13 @@ plan:
             pending, blocked, percentage }] }.
             Data source: aggregate LEGACY_ENVIRONMENT records from tracker
             (SQLite or REST call to CLI tracker service). Refreshed on each
-            request; no server-side caching older than 60s.
-          artifact: "packages/backend/src/plugins/migrationDashboard.ts"
+            request; no server-side caching older than 60s. If the repository
+            does not contain a live Backstage backend source workspace, wire the
+            running behavior into the prebuilt image/runtime path under
+            platform/backstage/ while still creating the source artifact file.
+          artifact: >
+            packages/backend/src/plugins/migrationDashboard.ts +
+            platform/backstage/custom-actions/migration-dashboard-module.cjs
           depends_on: [task-3.5, task-4.2]
           validation: >
             `curl http://localhost:7007/api/migration/status` returns JSON
@@ -787,8 +808,14 @@ plan:
             Route: /migration. Renders a table of teams with columns:
             Team, Total, Completed, Validated, In Progress, Blocked, %.
             Fetches from GET /api/migration/status every 60 seconds.
-            Shows "Gate PASSED" banner when all environments = completed.
-          artifact: "packages/app/src/components/MigrationDashboard/index.tsx"
+            Shows "Gate PASSED" banner when all environments = completed. If
+            the repository does not contain a live Backstage app source
+            workspace, wire the running route into the prebuilt image/runtime
+            path under platform/backstage/ while still creating the source
+            artifact file.
+          artifact: >
+            packages/app/src/components/MigrationDashboard/index.tsx +
+            platform/backstage/custom-actions/migration-dashboard-module.cjs
           depends_on: [task-4.4]
           validation: >
             Navigate to http://localhost:7007/migration — table renders
@@ -804,12 +831,16 @@ plan:
             webapp-postgresql.md, webapp-postgresql-redis.md, worker-redis.md.
             Each runbook follows UC-018 structure: export → convert → fix →
             submit → validate steps. Configure TechDocs in app-config.yaml
-            to serve docs/ via @backstage/plugin-techdocs.
+            to serve docs/ via @backstage/plugin-techdocs. If the repository
+            does not contain the normal Backstage frontend/content pipeline,
+            provide the equivalent runtime wiring in the prebuilt image so the
+            live `/docs` experience still serves these runbooks.
           artifact: >
             docs/runbooks/webapp-postgresql.md +
             docs/runbooks/webapp-postgresql-redis.md +
             docs/runbooks/worker-redis.md +
-            platform/backstage/app-config.techdocs.yaml
+            platform/backstage/app-config.techdocs.yaml +
+            platform/backstage/custom-actions/techdocs-runbooks-module.cjs
           depends_on: [task-4.1]
           validation: >
             Navigate to http://localhost:7007/docs — runbook pages render
@@ -844,7 +875,7 @@ plan:
           description: >
             Write tests/acceptance/lifecycle_test.go covering:
             AC-001 (commit valid manifest → Synced ≤5 min),
-            AC-003 (invalid schema → Degraded + zero resources),
+            AC-003 (invalid schema → Argo sync failure + zero resources),
             AC-005 (disable component → all resources gone ≤3 min),
             AC-006 (delete manifest → namespace deleted ≤5 min),
             AC-007 (idempotent re-apply → zero cluster changes),
@@ -883,9 +914,12 @@ plan:
           description: >
             Write tests/acceptance/gitops_test.go covering:
             AC-019 (cross-namespace connection refused — TCP timeout),
-            AC-037 (manual resource delete → ArgoCD restores ≤3 min),
-            AC-038 (manual kubectl scale → ArgoCD reverts ≤3 min),
-            AC-040 (kubectl apply → ArgoCD reverts ≤3 min),
+            AC-037 (manual deletion of the Argo-managed Environment claim
+            → ArgoCD restores ≤3 min),
+            AC-038 (manual `kubectl patch` of the Environment claim replicas
+            → ArgoCD reverts ≤3 min),
+            AC-040 (manual `kubectl apply` of a modified Environment claim
+            → ArgoCD reverts ≤3 min),
             AC-041 (pod-to-pod cross-namespace TCP refused),
             AC-042 (intra-namespace pod communication allowed).
             AC-039: verify Git commit history contains author + diff for
@@ -920,8 +954,8 @@ plan:
         - id: task-5.5
           name: "Security scan and credential audit"
           description: >
-            Run kubescape scan against all manifests in platform/ and
-            environments/. Add security-scan job to CI pipeline that fails
+            Run kubescape scan against repo-hosted platform manifests in
+            platform/. Add security-scan job to CI pipeline that fails
             on any CRITICAL severity finding. Write tests/security/credential_scan_test.go
             that greps all YAML files in environments/ for literal patterns:
             password:, secret:, token:, privateKey: as values (not references).
@@ -944,9 +978,11 @@ plan:
             Write .github/workflows/load-test.yaml (manual trigger) and
             tests/load/concurrency_test.go. Test: create 50 environment
             manifests via 50 sequential Git commits within a 5-min window
-            using a test helper. Measure per-environment sync time from
-            commit timestamp to ArgoCD Synced status. Assert: median ≤5 min,
-            no individual environment >8 min (AC-072). Cluster requirements:
+            using a test helper. Export `KUBECONFIG` explicitly for the test.
+            Measure per-environment reconcile time from commit timestamp to
+            the point where the generated ArgoCD Application has succeeded and
+            the derived Environment claim/namespace are observable. Assert:
+            median ≤5 min, no individual environment >8 min (AC-072). Cluster requirements:
             3 nodes × 4 vCPU × 8 GB RAM (documented in test header comment).
           artifact: >
             tests/load/concurrency_test.go +

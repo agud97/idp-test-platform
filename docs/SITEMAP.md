@@ -35,6 +35,10 @@
   - task-by-task progress
   - deviations, blockers, checkpoint history
 
+- [POST_IMPLEMENTATION_DOC_CHANGES.md](POST_IMPLEMENTATION_DOC_CHANGES.md)
+  - какие нормативные docs были переписаны после реального исполнения
+  - зачем это понадобилось
+
 ## Architecture / Design Documents
 
 - [ARCHITECTURE_OVERVIEW.md](ARCHITECTURE_OVERVIEW.md)
@@ -142,7 +146,8 @@
 
 1. [docs/status.md](status.md)
 2. [plan.yaml](plan.yaml)
-3. [RELEASE_SUMMARY.md](../RELEASE_SUMMARY.md)
+3. [POST_IMPLEMENTATION_DOC_CHANGES.md](POST_IMPLEMENTATION_DOC_CHANGES.md)
+4. [RELEASE_SUMMARY.md](../RELEASE_SUMMARY.md)
 
 ## Short Navigation Cheat Sheet
 

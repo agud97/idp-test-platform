@@ -275,6 +275,10 @@ The three baseline NetworkPolicies **MUST** be created by the Environment Compos
 - Refreshes data every 60 seconds
 The backend plugin **MUST** be implemented as a Backstage backend plugin at `packages/backend/src/plugins/migrationDashboard.ts`. (ref: MAJ-003, UC-019, AC-065)
 
+**MUST** treat this repository's Backstage distribution as a prebuilt-image deployment, not a full source monorepo. If `packages/backend/` or `packages/app/` source artifacts are not part of the live build graph, the live behavior **MUST** be wired through the image build/runtime integration under `platform/backstage/` while preserving the specified source-artifact files for traceability and spec compliance.
+
+**MUST** register scaffolder templates through the static Backstage catalog configuration that the running image actually ingests. Placing a template file under `templates/` alone is insufficient; the template **MUST** be reachable through `catalog.locations` or an equivalent file-backed catalog registration path packaged into the image.
+
 ### 3.4 Crossplane Provider
 
 **MUST** use `provider-kubernetes` (crossplane-contrib) for creating in-cluster Kubernetes resources (Deployments, Services, ConfigMaps, Secrets) from Compositions.
@@ -428,11 +432,11 @@ A service mapped to `enabled: false` because no component type matches does **NO
 | AC | Test Description |
 |---|---|
 | AC-001 | Commit valid manifest → assert `Synced` within 5 min |
-| AC-003 | Commit invalid manifest → assert zero resources created + `Degraded` status |
+| AC-003 | Commit invalid manifest → assert zero resources created + human-readable ArgoCD sync failure |
 | AC-005 | Disable component → assert all resources removed within 3 min |
 | AC-007 | Push same manifest twice → assert no cluster changes on second push |
 | AC-019 | Pod A → pod B cross-namespace connection → assert TCP refused |
-| AC-037 | Delete resource manually → assert ArgoCD restores within 3 min |
+| AC-037 | Delete Argo-managed Environment claim manually → assert ArgoCD restores within 3 min |
 | AC-052 | Run converter on 10-service fixture → assert ≥9 correctly mapped |
 | AC-059 | Export with PASSWORD/SECRET vars → assert values are `<REDACTED>` |
 | AC-069 | Commit manifest with 5 components → assert `Synced` within 5 min |

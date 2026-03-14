@@ -1,7 +1,7 @@
 # Acceptance Criteria — IDP Test Environment Platform
 
-**Version:** 1.0
-**Date:** 2026-03-14
+**Version:** 1.1
+**Date:** 2026-03-15
 **Format:** WHEN – THEN – SHALL
 **Sources:** [requirements.md](requirements.md) · [use_cases/](use_cases/)
 
@@ -22,7 +22,7 @@
 ### AC-003 · Environment creation — invalid YAML schema
 **WHEN** a developer commits an Environment manifest that violates the claim/XRD schema
 **THEN** the system attempts to apply the manifest
-**SHALL** reject it with a human-readable validation error, set environment status to `Degraded`, and create zero Kubernetes resources
+**SHALL** reject it with a human-readable validation error, expose the failure via the generated ArgoCD Application sync/operation state, and create zero Kubernetes resources for that environment
 
 ### AC-004 · Enable component — happy path
 **WHEN** a developer changes a component flag from `enabled: false` to `enabled: true` and commits
@@ -168,7 +168,7 @@
 ### AC-029 · View status — Degraded environment
 **WHEN** a developer opens the detail page of a failed environment
 **THEN** the system fetches status from ArgoCD
-**SHALL** display `Degraded` with a human-readable error summary and a direct link to provisioning logs
+**SHALL** display a failed state summary using ArgoCD health when available or sync/operation error details otherwise, together with a human-readable error summary and a direct link to provisioning logs
 
 ### AC-030 · View status — data freshness
 **WHEN** a developer views the environment status page
@@ -214,14 +214,14 @@
 ## 7. GitOps Reconciliation & Self-Healing
 
 ### AC-037 · Self-heal — manual resource deletion
-**WHEN** a cluster administrator manually deletes a Kubernetes resource that is defined in an environment manifest
+**WHEN** a cluster administrator manually deletes an ArgoCD-managed `Environment` claim that is defined by the Git-managed environment manifest
 **THEN** ArgoCD detects the drift in the next reconciliation cycle
-**SHALL** recreate the deleted resource within 3 minutes, restoring the cluster to the Git-defined state
+**SHALL** recreate the claim within 3 minutes and restore the dependent runtime resources to the Git-defined state
 
 ### AC-038 · Self-heal — manual resource modification
-**WHEN** someone manually scales a Deployment to 0 replicas via `kubectl scale`
-**THEN** ArgoCD detects the replica drift
-**SHALL** restore the replica count to the value specified in the Git manifest within 3 minutes
+**WHEN** someone manually modifies the ArgoCD-managed `Environment` claim via `kubectl` so that the desired replica count differs from Git
+**THEN** ArgoCD detects the claim drift
+**SHALL** restore the claim spec and resulting workload replica count to the values specified in the Git manifest within 3 minutes
 
 ### AC-039 · Audit trail — every change traceable in Git
 **WHEN** any environment is created, modified, or deleted
@@ -229,9 +229,9 @@
 **SHALL** the Git history contain the author identity, timestamp, and full diff of the manifest change
 
 ### AC-040 · Direct kubectl apply blocked
-**WHEN** a developer applies a Kubernetes manifest directly via `kubectl apply` to an environment namespace
-**THEN** ArgoCD detects the out-of-sync state
-**SHALL** revert the cluster to the Git-defined state within 3 minutes, removing the manually applied resources
+**WHEN** a developer applies a modified `Environment` claim directly via `kubectl apply` in the control namespace
+**THEN** ArgoCD detects the out-of-sync state on the Argo-managed claim layer
+**SHALL** revert the claim and dependent runtime resources to the Git-defined state within 3 minutes
 
 ---
 

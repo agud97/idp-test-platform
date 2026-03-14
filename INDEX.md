@@ -6,6 +6,7 @@
 - [HANDOFF.md](HANDOFF.md)
 - [OPERATIONS_CHECKLIST.md](OPERATIONS_CHECKLIST.md)
 - [docs/status.md](docs/status.md)
+- [docs/POST_IMPLEMENTATION_DOC_CHANGES.md](docs/POST_IMPLEMENTATION_DOC_CHANGES.md)
 - [TESTING_GUIDE.md](docs/TESTING_GUIDE.md)
 - [USER_JOURNEYS.md](docs/USER_JOURNEYS.md)
 
@@ -108,6 +109,9 @@
 - нужен trace task-by-task
 - нужно увидеть approved deviations и blockers history
 
+Если нужно понять, какие исходные spec/plan формулировки были переписаны после реального исполнения:
+- читай [docs/POST_IMPLEMENTATION_DOC_CHANGES.md](docs/POST_IMPLEMENTATION_DOC_CHANGES.md)
+
 ## Рекомендуемый порядок чтения
 
 ### Для руководителя / reviewer
@@ -146,6 +150,8 @@
   - типовые end-to-end пользовательские сценарии
 - [docs/status.md](docs/status.md)
   - формальная история исполнения плана
+- [docs/POST_IMPLEMENTATION_DOC_CHANGES.md](docs/POST_IMPLEMENTATION_DOC_CHANGES.md)
+  - что и почему было переписано в нормативных docs после исполнения
 
 ## Если нужно начать с одного файла
 
