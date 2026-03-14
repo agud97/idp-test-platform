@@ -14,4 +14,4 @@ spec:
       imageTag: 1.27.4
     - name: database
       type: postgresql
-      enabled: true
+      enabled: false
