@@ -9,36 +9,36 @@
 
 ## Быстрые ссылки
 
-- [INDEX.md](/root/codex/idp-test/INDEX.md)
+- [INDEX.md](INDEX.md)
   - главная точка входа в документацию
-- [RELEASE_SUMMARY.md](/root/codex/idp-test/RELEASE_SUMMARY.md)
+- [RELEASE_SUMMARY.md](RELEASE_SUMMARY.md)
   - итоговый release-style summary
-- [HANDOFF.md](/root/codex/idp-test/HANDOFF.md)
+- [HANDOFF.md](HANDOFF.md)
   - practical handoff для следующего инженера
-- [OPERATIONS_CHECKLIST.md](/root/codex/idp-test/OPERATIONS_CHECKLIST.md)
+- [OPERATIONS_CHECKLIST.md](OPERATIONS_CHECKLIST.md)
   - ежедневные operational checks и troubleshooting
-- [ARCHITECTURE_OVERVIEW.md](/root/codex/idp-test/docs/ARCHITECTURE_OVERVIEW.md)
+- [ARCHITECTURE_OVERVIEW.md](docs/ARCHITECTURE_OVERVIEW.md)
   - технический обзор архитектуры платформы
-- [TESTING_GUIDE.md](/root/codex/idp-test/docs/TESTING_GUIDE.md)
+- [TESTING_GUIDE.md](docs/TESTING_GUIDE.md)
   - подробный guide по тестам, migration workflow и запуску environments
-- [USER_JOURNEYS.md](/root/codex/idp-test/docs/USER_JOURNEYS.md)
+- [USER_JOURNEYS.md](docs/USER_JOURNEYS.md)
   - типовые пользовательские сценарии от compose до живого environment
-- [docs/status.md](/root/codex/idp-test/docs/status.md)
+- [docs/status.md](docs/status.md)
   - фактический task-by-task progress и deviations history
 
 ## Основные директории
 
-- [platform](/root/codex/idp-test/platform)
+- [platform](platform)
   - ArgoCD, Crossplane, Backstage, Authentik, NetworkPolicy manifests
-- [cli](/root/codex/idp-test/cli)
+- [cli](cli)
   - migration/export/validate/legacy lifecycle CLI
-- [templates](/root/codex/idp-test/templates)
+- [templates](templates)
   - Backstage scaffolder templates
-- [catalog](/root/codex/idp-test/catalog)
+- [catalog](catalog)
   - Backstage catalog registration
-- [environments](/root/codex/idp-test/environments)
+- [environments](environments)
   - GitOps-managed Environment manifests
-- [tests](/root/codex/idp-test/tests)
+- [tests](tests)
   - acceptance, security и load tests
 
 ## Canonical Validation Commands

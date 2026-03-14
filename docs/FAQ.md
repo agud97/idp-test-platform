@@ -6,11 +6,11 @@
 
 ## See Also
 
-- [INDEX.md](/root/codex/idp-test/INDEX.md)
-- [TESTING_GUIDE.md](/root/codex/idp-test/docs/TESTING_GUIDE.md)
-- [USER_JOURNEYS.md](/root/codex/idp-test/docs/USER_JOURNEYS.md)
-- [OPERATIONS_CHECKLIST.md](/root/codex/idp-test/OPERATIONS_CHECKLIST.md)
-- [HANDOFF.md](/root/codex/idp-test/HANDOFF.md)
+- [INDEX.md](../INDEX.md)
+- [TESTING_GUIDE.md](TESTING_GUIDE.md)
+- [USER_JOURNEYS.md](USER_JOURNEYS.md)
+- [OPERATIONS_CHECKLIST.md](../OPERATIONS_CHECKLIST.md)
+- [HANDOFF.md](../HANDOFF.md)
 
 ## Какой kubeconfig использовать?
 
@@ -89,8 +89,8 @@ Git.
 2. через Backstage scaffolder template
 
 Подробный workflow:
-- [TESTING_GUIDE.md](/root/codex/idp-test/docs/TESTING_GUIDE.md)
-- [USER_JOURNEYS.md](/root/codex/idp-test/docs/USER_JOURNEYS.md)
+- [TESTING_GUIDE.md](TESTING_GUIDE.md)
+- [USER_JOURNEYS.md](USER_JOURNEYS.md)
 
 ## Как удалить environment?
 
@@ -152,8 +152,8 @@ enabled: false
 - проверить generated app / claim / namespace
 
 Подробно:
-- [TESTING_GUIDE.md](/root/codex/idp-test/docs/TESTING_GUIDE.md)
-- [USER_JOURNEYS.md](/root/codex/idp-test/docs/USER_JOURNEYS.md)
+- [TESTING_GUIDE.md](TESTING_GUIDE.md)
+- [USER_JOURNEYS.md](USER_JOURNEYS.md)
 
 ## Как зарегистрировать legacy environment в tracker?
 
@@ -197,7 +197,7 @@ deprecation-report-YYYY-MM-DD.md
 5. проверить runtime resources
 
 Полезный документ:
-- [OPERATIONS_CHECKLIST.md](/root/codex/idp-test/OPERATIONS_CHECKLIST.md)
+- [OPERATIONS_CHECKLIST.md](../OPERATIONS_CHECKLIST.md)
 
 ## Что запускать как минимальный smoke test?
 
@@ -255,8 +255,8 @@ go test ./tests/security/... -v
 ## Где читать подробнее?
 
 Если нужен:
-- обзор: [RELEASE_SUMMARY.md](/root/codex/idp-test/RELEASE_SUMMARY.md)
-- handoff: [HANDOFF.md](/root/codex/idp-test/HANDOFF.md)
-- operations: [OPERATIONS_CHECKLIST.md](/root/codex/idp-test/OPERATIONS_CHECKLIST.md)
-- подробный usage guide: [TESTING_GUIDE.md](/root/codex/idp-test/docs/TESTING_GUIDE.md)
-- user scenarios: [USER_JOURNEYS.md](/root/codex/idp-test/docs/USER_JOURNEYS.md)
+- обзор: [RELEASE_SUMMARY.md](../RELEASE_SUMMARY.md)
+- handoff: [HANDOFF.md](../HANDOFF.md)
+- operations: [OPERATIONS_CHECKLIST.md](../OPERATIONS_CHECKLIST.md)
+- подробный usage guide: [TESTING_GUIDE.md](TESTING_GUIDE.md)
+- user scenarios: [USER_JOURNEYS.md](USER_JOURNEYS.md)

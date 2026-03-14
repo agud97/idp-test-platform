@@ -12,12 +12,12 @@
 
 ## See Also
 
-- [INDEX.md](/root/codex/idp-test/INDEX.md)
-- [RELEASE_SUMMARY.md](/root/codex/idp-test/RELEASE_SUMMARY.md)
-- [HANDOFF.md](/root/codex/idp-test/HANDOFF.md)
-- [OPERATIONS_CHECKLIST.md](/root/codex/idp-test/OPERATIONS_CHECKLIST.md)
-- [ARCHITECTURE_OVERVIEW.md](/root/codex/idp-test/docs/ARCHITECTURE_OVERVIEW.md)
-- [status.md](/root/codex/idp-test/docs/status.md)
+- [INDEX.md](../INDEX.md)
+- [RELEASE_SUMMARY.md](../RELEASE_SUMMARY.md)
+- [HANDOFF.md](../HANDOFF.md)
+- [OPERATIONS_CHECKLIST.md](../OPERATIONS_CHECKLIST.md)
+- [ARCHITECTURE_OVERVIEW.md](ARCHITECTURE_OVERVIEW.md)
+- [status.md](status.md)
 
 ## 1. Базовая подготовка
 
@@ -55,10 +55,10 @@ kubectl get --raw=/readyz
 ### Acceptance
 
 Файлы:
-- [lifecycle_test.go](/root/codex/idp-test/tests/acceptance/lifecycle_test.go)
-- [components_test.go](/root/codex/idp-test/tests/acceptance/components_test.go)
-- [gitops_test.go](/root/codex/idp-test/tests/acceptance/gitops_test.go)
-- [migration_test.go](/root/codex/idp-test/tests/acceptance/migration_test.go)
+- [lifecycle_test.go](../tests/acceptance/lifecycle_test.go)
+- [components_test.go](../tests/acceptance/components_test.go)
+- [gitops_test.go](../tests/acceptance/gitops_test.go)
+- [migration_test.go](../tests/acceptance/migration_test.go)
 
 Что проверяют:
 - lifecycle environment manifests
@@ -69,8 +69,8 @@ kubectl get --raw=/readyz
 ### Security
 
 Файлы:
-- [credential_scan_test.go](/root/codex/idp-test/tests/security/credential_scan_test.go)
-- [netpol_test.go](/root/codex/idp-test/tests/security/netpol_test.go)
+- [credential_scan_test.go](../tests/security/credential_scan_test.go)
+- [netpol_test.go](../tests/security/netpol_test.go)
 
 Что проверяют:
 - отсутствие literal credentials в `environments/`
@@ -79,7 +79,7 @@ kubectl get --raw=/readyz
 ### Load
 
 Файл:
-- [concurrency_test.go](/root/codex/idp-test/tests/load/concurrency_test.go)
+- [concurrency_test.go](../tests/load/concurrency_test.go)
 
 Что проверяет:
 - 50 environments
@@ -345,7 +345,7 @@ kubectl get netpol -n env-platform-demo
 ### Вариант B. Через Backstage
 
 Используется template:
-- [templates/new-environment/template.yaml](/root/codex/idp-test/templates/new-environment/template.yaml)
+- [templates/new-environment/template.yaml](../templates/new-environment/template.yaml)
 
 Фактически flow такой же:
 - Backstage делает commit в GitOps branch
@@ -488,7 +488,7 @@ kubectl get all -n env-<team>-<env>
 - обновить environment composition, чтобы новый `component.type` мапился на нужный child composite
 
 Ключевая точка:
-- [platform/crossplane/environment/composition.yaml](/root/codex/idp-test/platform/crossplane/environment/composition.yaml)
+- [platform/crossplane/environment/composition.yaml](../platform/crossplane/environment/composition.yaml)
 
 #### Шаг 3. Проверить provider/function compatibility
 
@@ -501,7 +501,7 @@ kubectl get all -n env-<team>-<env>
 
 Если новый type должен автоматически обнаруживаться из compose:
 - обновить:
-  - [cli/pkg/converter/converter.go](/root/codex/idp-test/cli/pkg/converter/converter.go)
+  - [cli/pkg/converter/converter.go](../cli/pkg/converter/converter.go)
 
 И потом проверить:
 

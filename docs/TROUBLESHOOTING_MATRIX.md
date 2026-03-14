@@ -12,10 +12,10 @@
 
 ## See Also
 
-- [INDEX.md](/root/codex/idp-test/INDEX.md)
-- [OPERATIONS_CHECKLIST.md](/root/codex/idp-test/OPERATIONS_CHECKLIST.md)
-- [FAQ.md](/root/codex/idp-test/docs/FAQ.md)
-- [TESTING_GUIDE.md](/root/codex/idp-test/docs/TESTING_GUIDE.md)
+- [INDEX.md](../INDEX.md)
+- [OPERATIONS_CHECKLIST.md](../OPERATIONS_CHECKLIST.md)
+- [FAQ.md](FAQ.md)
+- [TESTING_GUIDE.md](TESTING_GUIDE.md)
 
 ## Matrix
 
@@ -392,5 +392,5 @@ go test ./tests/security/... -v
    - Kubernetes runtime
    - CLI / tracker
 4. затем перейти в:
-   - [OPERATIONS_CHECKLIST.md](/root/codex/idp-test/OPERATIONS_CHECKLIST.md) для более широкого runbook
-   - [TESTING_GUIDE.md](/root/codex/idp-test/docs/TESTING_GUIDE.md) для полного workflow
+   - [OPERATIONS_CHECKLIST.md](../OPERATIONS_CHECKLIST.md) для более широкого runbook
+   - [TESTING_GUIDE.md](TESTING_GUIDE.md) для полного workflow

@@ -2,12 +2,12 @@
 
 ## See Also
 
-- [RELEASE_SUMMARY.md](/root/codex/idp-test/RELEASE_SUMMARY.md)
-- [HANDOFF.md](/root/codex/idp-test/HANDOFF.md)
-- [OPERATIONS_CHECKLIST.md](/root/codex/idp-test/OPERATIONS_CHECKLIST.md)
-- [docs/status.md](/root/codex/idp-test/docs/status.md)
-- [TESTING_GUIDE.md](/root/codex/idp-test/docs/TESTING_GUIDE.md)
-- [USER_JOURNEYS.md](/root/codex/idp-test/docs/USER_JOURNEYS.md)
+- [RELEASE_SUMMARY.md](RELEASE_SUMMARY.md)
+- [HANDOFF.md](HANDOFF.md)
+- [OPERATIONS_CHECKLIST.md](OPERATIONS_CHECKLIST.md)
+- [docs/status.md](docs/status.md)
+- [TESTING_GUIDE.md](docs/TESTING_GUIDE.md)
+- [USER_JOURNEYS.md](docs/USER_JOURNEYS.md)
 
 ## Назначение
 
@@ -19,7 +19,7 @@
 
 ### Нужна общая картина релиза
 
-Читай [RELEASE_SUMMARY.md](/root/codex/idp-test/RELEASE_SUMMARY.md).
+Читай [RELEASE_SUMMARY.md](RELEASE_SUMMARY.md).
 
 Когда использовать:
 - нужно понять, что именно реализовано
@@ -36,7 +36,7 @@
 
 ### Нужна передача платформы следующему инженеру
 
-Читай [HANDOFF.md](/root/codex/idp-test/HANDOFF.md).
+Читай [HANDOFF.md](HANDOFF.md).
 
 Когда использовать:
 - onboarding нового инженера
@@ -53,7 +53,7 @@
 
 ### Нужны практические ежедневные команды и процедуры
 
-Читай [OPERATIONS_CHECKLIST.md](/root/codex/idp-test/OPERATIONS_CHECKLIST.md).
+Читай [OPERATIONS_CHECKLIST.md](OPERATIONS_CHECKLIST.md).
 
 Когда использовать:
 - ежедневный health check
@@ -70,7 +70,7 @@
 
 ### Нужен подробный guide по использованию платформы
 
-Читай [TESTING_GUIDE.md](/root/codex/idp-test/docs/TESTING_GUIDE.md).
+Читай [TESTING_GUIDE.md](docs/TESTING_GUIDE.md).
 
 Когда использовать:
 - нужно понять полный workflow миграции из `docker-compose`
@@ -86,7 +86,7 @@
 
 ### Нужны типовые сценарии от лица пользователя
 
-Читай [USER_JOURNEYS.md](/root/codex/idp-test/docs/USER_JOURNEYS.md).
+Читай [USER_JOURNEYS.md](docs/USER_JOURNEYS.md).
 
 Когда использовать:
 - onboarding
@@ -101,7 +101,7 @@
 
 ### Нужен фактический прогресс исполнения плана
 
-Читай [docs/status.md](/root/codex/idp-test/docs/status.md).
+Читай [docs/status.md](docs/status.md).
 
 Когда использовать:
 - нужно понять, какие задачи были закрыты
@@ -112,46 +112,46 @@
 
 ### Для руководителя / reviewer
 
-1. [RELEASE_SUMMARY.md](/root/codex/idp-test/RELEASE_SUMMARY.md)
-2. [docs/status.md](/root/codex/idp-test/docs/status.md)
+1. [RELEASE_SUMMARY.md](RELEASE_SUMMARY.md)
+2. [docs/status.md](docs/status.md)
 
 ### Для инженера, который принимает систему
 
-1. [RELEASE_SUMMARY.md](/root/codex/idp-test/RELEASE_SUMMARY.md)
-2. [HANDOFF.md](/root/codex/idp-test/HANDOFF.md)
-3. [OPERATIONS_CHECKLIST.md](/root/codex/idp-test/OPERATIONS_CHECKLIST.md)
+1. [RELEASE_SUMMARY.md](RELEASE_SUMMARY.md)
+2. [HANDOFF.md](HANDOFF.md)
+3. [OPERATIONS_CHECKLIST.md](OPERATIONS_CHECKLIST.md)
 
 ### Для инженера on-call / operations
 
-1. [OPERATIONS_CHECKLIST.md](/root/codex/idp-test/OPERATIONS_CHECKLIST.md)
-2. [HANDOFF.md](/root/codex/idp-test/HANDOFF.md)
+1. [OPERATIONS_CHECKLIST.md](OPERATIONS_CHECKLIST.md)
+2. [HANDOFF.md](HANDOFF.md)
 
 ### Для разработчика, который меняет platform code
 
-1. [RELEASE_SUMMARY.md](/root/codex/idp-test/RELEASE_SUMMARY.md)
-2. [OPERATIONS_CHECKLIST.md](/root/codex/idp-test/OPERATIONS_CHECKLIST.md)
-3. [docs/status.md](/root/codex/idp-test/docs/status.md)
+1. [RELEASE_SUMMARY.md](RELEASE_SUMMARY.md)
+2. [OPERATIONS_CHECKLIST.md](OPERATIONS_CHECKLIST.md)
+3. [docs/status.md](docs/status.md)
 
 ## Карта документов
 
-- [RELEASE_SUMMARY.md](/root/codex/idp-test/RELEASE_SUMMARY.md)
+- [RELEASE_SUMMARY.md](RELEASE_SUMMARY.md)
   - итоговая release-level картина
-- [HANDOFF.md](/root/codex/idp-test/HANDOFF.md)
+- [HANDOFF.md](HANDOFF.md)
   - practical handoff и эксплуатационный контекст
-- [OPERATIONS_CHECKLIST.md](/root/codex/idp-test/OPERATIONS_CHECKLIST.md)
+- [OPERATIONS_CHECKLIST.md](OPERATIONS_CHECKLIST.md)
   - команды, проверки и operational troubleshooting
-- [TESTING_GUIDE.md](/root/codex/idp-test/docs/TESTING_GUIDE.md)
+- [TESTING_GUIDE.md](docs/TESTING_GUIDE.md)
   - подробный guide по тестированию и практическому использованию
-- [USER_JOURNEYS.md](/root/codex/idp-test/docs/USER_JOURNEYS.md)
+- [USER_JOURNEYS.md](docs/USER_JOURNEYS.md)
   - типовые end-to-end пользовательские сценарии
-- [docs/status.md](/root/codex/idp-test/docs/status.md)
+- [docs/status.md](docs/status.md)
   - формальная история исполнения плана
 
 ## Если нужно начать с одного файла
 
 Выбор такой:
-- нужен обзор: [RELEASE_SUMMARY.md](/root/codex/idp-test/RELEASE_SUMMARY.md)
-- нужно эксплуатировать: [OPERATIONS_CHECKLIST.md](/root/codex/idp-test/OPERATIONS_CHECKLIST.md)
-- нужно передать систему: [HANDOFF.md](/root/codex/idp-test/HANDOFF.md)
-- нужно научиться пользоваться: [TESTING_GUIDE.md](/root/codex/idp-test/docs/TESTING_GUIDE.md)
-- нужны готовые сценарии: [USER_JOURNEYS.md](/root/codex/idp-test/docs/USER_JOURNEYS.md)
+- нужен обзор: [RELEASE_SUMMARY.md](RELEASE_SUMMARY.md)
+- нужно эксплуатировать: [OPERATIONS_CHECKLIST.md](OPERATIONS_CHECKLIST.md)
+- нужно передать систему: [HANDOFF.md](HANDOFF.md)
+- нужно научиться пользоваться: [TESTING_GUIDE.md](docs/TESTING_GUIDE.md)
+- нужны готовые сценарии: [USER_JOURNEYS.md](docs/USER_JOURNEYS.md)

@@ -2,13 +2,13 @@
 
 ## See Also
 
-- [INDEX.md](/root/codex/idp-test/INDEX.md)
-- [RELEASE_SUMMARY.md](/root/codex/idp-test/RELEASE_SUMMARY.md)
-- [HANDOFF.md](/root/codex/idp-test/HANDOFF.md)
-- [TESTING_GUIDE.md](/root/codex/idp-test/docs/TESTING_GUIDE.md)
-- [USER_JOURNEYS.md](/root/codex/idp-test/docs/USER_JOURNEYS.md)
-- [FAQ.md](/root/codex/idp-test/docs/FAQ.md)
-- [docs/status.md](/root/codex/idp-test/docs/status.md)
+- [INDEX.md](INDEX.md)
+- [RELEASE_SUMMARY.md](RELEASE_SUMMARY.md)
+- [HANDOFF.md](HANDOFF.md)
+- [TESTING_GUIDE.md](docs/TESTING_GUIDE.md)
+- [USER_JOURNEYS.md](docs/USER_JOURNEYS.md)
+- [FAQ.md](docs/FAQ.md)
+- [docs/status.md](docs/status.md)
 
 ## Назначение
 
@@ -18,7 +18,7 @@
 - безопасный повторный запуск валидаций
 - действия перед и после изменений
 
-Он не заменяет [HANDOFF.md](/root/codex/idp-test/HANDOFF.md) и [RELEASE_SUMMARY.md](/root/codex/idp-test/RELEASE_SUMMARY.md), а дополняет их более прикладным операционным списком.
+Он не заменяет [HANDOFF.md](HANDOFF.md) и [RELEASE_SUMMARY.md](RELEASE_SUMMARY.md), а дополняет их более прикладным операционным списком.
 
 ## Базовая подготовка
 
@@ -446,6 +446,6 @@ go test ./tests/acceptance/... -run TestLifecycle -v
 
 ## Связанные документы
 
-- [RELEASE_SUMMARY.md](/root/codex/idp-test/RELEASE_SUMMARY.md)
-- [HANDOFF.md](/root/codex/idp-test/HANDOFF.md)
-- [docs/status.md](/root/codex/idp-test/docs/status.md)
+- [RELEASE_SUMMARY.md](RELEASE_SUMMARY.md)
+- [HANDOFF.md](HANDOFF.md)
+- [docs/status.md](docs/status.md)

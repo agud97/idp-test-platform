@@ -6,10 +6,10 @@
 
 ## See Also
 
-- [INDEX.md](/root/codex/idp-test/INDEX.md)
-- [ARCHITECTURE_OVERVIEW.md](/root/codex/idp-test/docs/ARCHITECTURE_OVERVIEW.md)
-- [TESTING_GUIDE.md](/root/codex/idp-test/docs/TESTING_GUIDE.md)
-- [FAQ.md](/root/codex/idp-test/docs/FAQ.md)
+- [INDEX.md](../INDEX.md)
+- [ARCHITECTURE_OVERVIEW.md](ARCHITECTURE_OVERVIEW.md)
+- [TESTING_GUIDE.md](TESTING_GUIDE.md)
+- [FAQ.md](FAQ.md)
 
 ## Terms
 
@@ -18,7 +18,7 @@
 Пользовательский namespaced claim типа `idp.platform.io/v1alpha1`.
 
 Где находится:
-- [platform/crds/environment.yaml](/root/codex/idp-test/platform/crds/environment.yaml)
+- [platform/crds/environment.yaml](../platform/crds/environment.yaml)
 
 Что означает:
 - описывает test environment на уровне desired state
@@ -71,7 +71,7 @@ ArgoCD `Application`, автоматически созданный `Application
 ArgoCD ресурс, который сканирует Git и генерирует `Application` objects.
 
 Где находится:
-- [platform/argocd/appset-environments.yaml](/root/codex/idp-test/platform/argocd/appset-environments.yaml)
+- [platform/argocd/appset-environments.yaml](../platform/argocd/appset-environments.yaml)
 
 ### Source of Truth
 
@@ -93,8 +93,8 @@ ArgoCD ресурс, который сканирует Git и генерируе
 Шаблон, который описывает, какие ресурсы должны создаваться из composite resource.
 
 Примеры:
-- [platform/crossplane/environment/composition.yaml](/root/codex/idp-test/platform/crossplane/environment/composition.yaml)
-- [platform/crossplane/webapp/composition.yaml](/root/codex/idp-test/platform/crossplane/webapp/composition.yaml)
+- [platform/crossplane/environment/composition.yaml](../platform/crossplane/environment/composition.yaml)
+- [platform/crossplane/webapp/composition.yaml](../platform/crossplane/webapp/composition.yaml)
 
 ### Provider
 

@@ -2,13 +2,13 @@
 
 ## See Also
 
-- [INDEX.md](/root/codex/idp-test/INDEX.md)
-- [RELEASE_SUMMARY.md](/root/codex/idp-test/RELEASE_SUMMARY.md)
-- [OPERATIONS_CHECKLIST.md](/root/codex/idp-test/OPERATIONS_CHECKLIST.md)
-- [TESTING_GUIDE.md](/root/codex/idp-test/docs/TESTING_GUIDE.md)
-- [USER_JOURNEYS.md](/root/codex/idp-test/docs/USER_JOURNEYS.md)
-- [FAQ.md](/root/codex/idp-test/docs/FAQ.md)
-- [docs/status.md](/root/codex/idp-test/docs/status.md)
+- [INDEX.md](INDEX.md)
+- [RELEASE_SUMMARY.md](RELEASE_SUMMARY.md)
+- [OPERATIONS_CHECKLIST.md](OPERATIONS_CHECKLIST.md)
+- [TESTING_GUIDE.md](docs/TESTING_GUIDE.md)
+- [USER_JOURNEYS.md](docs/USER_JOURNEYS.md)
+- [FAQ.md](docs/FAQ.md)
+- [docs/status.md](docs/status.md)
 
 ## Что запускать в первый день эксплуатации
 
@@ -67,11 +67,11 @@ Kubernetes:
 
 Backstage:
 - OIDC/Authentik настройки из:
-  - [platform/backstage/app-config.auth.yaml](/root/codex/idp-test/platform/backstage/app-config.auth.yaml)
+  - [platform/backstage/app-config.auth.yaml](platform/backstage/app-config.auth.yaml)
 - catalog/kubernetes/techdocs overrides из:
-  - [platform/backstage/app-config.catalog.yaml](/root/codex/idp-test/platform/backstage/app-config.catalog.yaml)
-  - [platform/backstage/app-config.kubernetes.yaml](/root/codex/idp-test/platform/backstage/app-config.kubernetes.yaml)
-  - [platform/backstage/app-config.techdocs.yaml](/root/codex/idp-test/platform/backstage/app-config.techdocs.yaml)
+  - [platform/backstage/app-config.catalog.yaml](platform/backstage/app-config.catalog.yaml)
+  - [platform/backstage/app-config.kubernetes.yaml](platform/backstage/app-config.kubernetes.yaml)
+  - [platform/backstage/app-config.techdocs.yaml](platform/backstage/app-config.techdocs.yaml)
 
 Load workflow:
 - GitHub Actions secret:
@@ -182,7 +182,7 @@ KUBECONFIG=/root/codex/kubeconfig_6144665 LOAD_TEST_COUNT=50 go test ./tests/loa
 - Acceptance и load tests делают реальные commits в GitOps branch. Их лучше запускать на выделенной ветке или в окне, где служебные commits допустимы.
 - Если Kubernetes API начинает флапать по timeout, сначала проверять обычный `kubectl get nodes`, и только потом доверять acceptance/load результатам.
 - Для `task-5.6` критично явно задавать правильный `KUBECONFIG`; без этого live-наблюдаемость может давать ложные пустые результаты.
-- `kubescape` используется для `platform/`; проверка `environments/` на секреты идёт через [tests/security/credential_scan_test.go](/root/codex/idp-test/tests/security/credential_scan_test.go), а не через scanner.
+- `kubescape` используется для `platform/`; проверка `environments/` на секреты идёт через [tests/security/credential_scan_test.go](tests/security/credential_scan_test.go), а не через scanner.
 
 ## Что передать следующему инженеру
 
@@ -193,4 +193,4 @@ KUBECONFIG=/root/codex/kubeconfig_6144665 LOAD_TEST_COUNT=50 go test ./tests/loa
 - expected namespace naming pattern:
   - `env-<team>-<env>`
 - canonical verification commands из этого файла
-- ссылку на [RELEASE_SUMMARY.md](/root/codex/idp-test/RELEASE_SUMMARY.md)
+- ссылку на [RELEASE_SUMMARY.md](RELEASE_SUMMARY.md)

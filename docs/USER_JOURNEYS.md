@@ -12,11 +12,11 @@
 
 ## See Also
 
-- [INDEX.md](/root/codex/idp-test/INDEX.md)
-- [README.md](/root/codex/idp-test/README.md)
-- [TESTING_GUIDE.md](/root/codex/idp-test/docs/TESTING_GUIDE.md)
-- [OPERATIONS_CHECKLIST.md](/root/codex/idp-test/OPERATIONS_CHECKLIST.md)
-- [ARCHITECTURE_OVERVIEW.md](/root/codex/idp-test/docs/ARCHITECTURE_OVERVIEW.md)
+- [INDEX.md](../INDEX.md)
+- [README.md](../README.md)
+- [TESTING_GUIDE.md](TESTING_GUIDE.md)
+- [OPERATIONS_CHECKLIST.md](../OPERATIONS_CHECKLIST.md)
+- [ARCHITECTURE_OVERVIEW.md](ARCHITECTURE_OVERVIEW.md)
 
 ## Journey 1. Из `docker-compose` в живой test environment
 
@@ -102,7 +102,7 @@ kubectl get all -n env-platform-demo
 ### Шаг 2. Открыть scaffolder template
 
 Используется template:
-- [template.yaml](/root/codex/idp-test/templates/new-environment/template.yaml)
+- [template.yaml](../templates/new-environment/template.yaml)
 
 ### Шаг 3. Заполнить параметры
 
@@ -342,12 +342,12 @@ IDP_REPORT_DIR=./reports ./cli/idp deprecate-legacy --confirm
 
 Понадобится:
 - новый XRD/composition или эквивалентный provisioning path
-- изменение [platform/crossplane/environment/composition.yaml](/root/codex/idp-test/platform/crossplane/environment/composition.yaml)
+- изменение [platform/crossplane/environment/composition.yaml](../platform/crossplane/environment/composition.yaml)
 
 #### Шаг 3. Добавить mapping в CLI converter при необходимости
 
 Файл:
-- [cli/pkg/converter/converter.go](/root/codex/idp-test/cli/pkg/converter/converter.go)
+- [cli/pkg/converter/converter.go](../cli/pkg/converter/converter.go)
 
 #### Шаг 4. Добавить acceptance coverage
 
