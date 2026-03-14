@@ -6,6 +6,8 @@ RUN yarn add @backstage/plugin-auth-backend-module-oidc-provider@^0.4.2
 
 WORKDIR /app
 
+COPY catalog /app/catalog
+COPY templates /app/templates
 COPY platform/backstage/custom-actions/gitops-repo-push-module.cjs /app/custom/gitops-repo-push-module.cjs
 
 RUN node - <<'NODE'
