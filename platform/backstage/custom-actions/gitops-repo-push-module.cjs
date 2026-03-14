@@ -82,6 +82,7 @@ function createGithubRepoUpsertAction(options) {
       const remoteUrl = `https://${host}/${owner}/${repo}.git`;
       const repoContentsUrl = `https://${host}/${owner}/${repo}/blob/${branch}`;
       const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'scaffolder-upsert-'));
+      const gitAuth = { username: 'x-access-token', password: token };
 
       try {
         if (ctx.isDryRun) {
@@ -94,7 +95,7 @@ function createGithubRepoUpsertAction(options) {
         await cloneRepo({
           url: remoteUrl,
           dir: tempDir,
-          auth: { token },
+          auth: gitAuth,
           logger: ctx.logger,
           ref: branch,
           depth: 1,
@@ -116,7 +117,7 @@ function createGithubRepoUpsertAction(options) {
 
         const { commitHash } = await commitAndPushRepo({
           dir: tempDir,
-          auth: { token },
+          auth: gitAuth,
           logger: ctx.logger,
           commitMessage: gitCommitMessage || 'Update repository contents',
           gitAuthorInfo: {
