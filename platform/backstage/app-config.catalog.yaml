@@ -8,3 +8,8 @@ backstage:
       locations:
         - type: url
           target: https://raw.githubusercontent.com/agud97/idp-test-platform/feature/phase-1-foundation/catalog/all-components.yaml
+          rules:
+            - allow:
+                - Component
+                - System
+                - Group
