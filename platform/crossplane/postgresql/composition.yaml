@@ -12,17 +12,6 @@ spec:
     kind: XPostgresqlInstance
   mode: Pipeline
   pipeline:
-    - step: load-environment-config
-      functionRef:
-        name: function-environment-configs
-      input:
-        apiVersion: environmentconfigs.fn.crossplane.io/v1beta1
-        kind: Input
-        spec:
-          environmentConfigs:
-            - type: Reference
-              ref:
-                name: cluster-defaults
     - step: render-postgresql
       functionRef:
         name: function-go-templating
@@ -35,19 +24,19 @@ spec:
             {{- $xr := getCompositeResource . -}}
             {{- $spec := $xr.spec -}}
             {{- if $spec.enabled }}
-            {{- $env := index .context "apiextensions.crossplane.io/environment" -}}
             {{- $componentName := $spec.componentName -}}
             {{- $namespace := $spec.namespace -}}
             {{- $environmentName := default $namespace $spec.environmentName -}}
             {{- $team := default "platform" $spec.team -}}
             {{- $port := default 5432 $spec.port -}}
             {{- $storageSize := default "8Gi" $spec.storageSize -}}
-            {{- $storageClassName := default (index $env "defaultStorageClass") $spec.storageClassName -}}
-            {{- $imageRegistry := default "docker.io" (index $env "defaultImageRegistry") -}}
+            {{- $storageClassName := "" -}}
+            {{- if hasKey $spec "storageClassName" }}{{- $storageClassName = $spec.storageClassName -}}{{- end -}}
+            {{- $imageRegistry := "docker.io" -}}
             {{- $imageTag := default "16" $spec.imageTag -}}
             {{- $secretName := printf "%s-db-credentials" $componentName -}}
-            {{- $username := randAlphaNum 16 | lower -}}
-            {{- $password := randAlphaNum 32 -}}
+            {{- $username := $componentName -}}
+            {{- $password := printf "%s-%s-password" $environmentName $componentName -}}
             ---
             apiVersion: kubernetes.crossplane.io/v1alpha2
             kind: Object
@@ -61,10 +50,6 @@ spec:
                 idp.platform.io/team: {{ $team }}
             spec:
               deletionPolicy: Delete
-              managementPolicies:
-                - Observe
-                - Create
-                - Delete
               providerConfigRef:
                 name: kubernetes-provider
               forProvider:
@@ -79,14 +64,6 @@ spec:
                       app.kubernetes.io/name: postgresql
                       idp.platform.io/environment: {{ $environmentName }}
                       idp.platform.io/team: {{ $team }}
-                  type: Opaque
-              initProvider:
-                manifest:
-                  apiVersion: v1
-                  kind: Secret
-                  metadata:
-                    name: {{ $secretName }}
-                    namespace: {{ $namespace }}
                   type: Opaque
                   data:
                     username: {{ $username | b64enc }}
@@ -160,10 +137,12 @@ spec:
                   spec:
                     accessModes:
                       - ReadWriteOnce
-                    storageClassName: {{ $storageClassName }}
                     resources:
                       requests:
                         storage: {{ $storageSize }}
+                    {{- if $storageClassName }}
+                    storageClassName: {{ $storageClassName }}
+                    {{- end }}
             ---
             apiVersion: kubernetes.crossplane.io/v1alpha2
             kind: Object

@@ -12,17 +12,6 @@ spec:
     kind: XWebappInstance
   mode: Pipeline
   pipeline:
-    - step: load-environment-config
-      functionRef:
-        name: function-environment-configs
-      input:
-        apiVersion: environmentconfigs.fn.crossplane.io/v1beta1
-        kind: Input
-        spec:
-          environmentConfigs:
-            - type: Reference
-              ref:
-                name: cluster-defaults
     - step: render-webapp
       functionRef:
         name: function-go-templating
@@ -35,16 +24,14 @@ spec:
             {{- $xr := getCompositeResource . -}}
             {{- $spec := $xr.spec -}}
             {{- if $spec.enabled }}
-            {{- $env := index .context "apiextensions.crossplane.io/environment" -}}
             {{- $componentName := $spec.componentName -}}
             {{- $namespace := $spec.namespace -}}
             {{- $environmentName := default $namespace $spec.environmentName -}}
             {{- $team := default "platform" $spec.team -}}
             {{- $port := default 8080 $spec.port -}}
             {{- $replicas := 1 -}}
-            {{- if hasKey $env "defaultReplicas" }}{{- $replicas = index $env "defaultReplicas" -}}{{- end -}}
             {{- if hasKey $spec "replicas" }}{{- $replicas = $spec.replicas -}}{{- end -}}
-            {{- $imageRepository := printf "%s/example/webapp" (default "docker.io" (index $env "defaultImageRegistry")) -}}
+            {{- $imageRepository := "docker.io/library/nginx" -}}
             {{- if hasKey $spec "imageRepository" }}{{- $imageRepository = $spec.imageRepository -}}{{- end -}}
             {{- $imageTag := default "latest" $spec.imageTag -}}
             {{- $configMapName := printf "%s-config" $componentName -}}

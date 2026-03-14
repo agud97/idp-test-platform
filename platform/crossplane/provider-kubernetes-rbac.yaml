@@ -1,0 +1,42 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: provider-kubernetes-runtime
+  labels:
+    app.kubernetes.io/managed-by: crossplane
+    idp.platform.io/environment: shared
+    idp.platform.io/team: platform
+rules:
+  - apiGroups: [""]
+    resources:
+      - namespaces
+      - configmaps
+      - secrets
+      - services
+      - persistentvolumeclaims
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["apps"]
+    resources:
+      - deployments
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["networking.k8s.io"]
+    resources:
+      - networkpolicies
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: provider-kubernetes-runtime
+  labels:
+    app.kubernetes.io/managed-by: crossplane
+    idp.platform.io/environment: shared
+    idp.platform.io/team: platform
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: provider-kubernetes-runtime
+subjects:
+  - kind: Group
+    apiGroup: rbac.authorization.k8s.io
+    name: system:serviceaccounts:crossplane-system

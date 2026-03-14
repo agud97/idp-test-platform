@@ -3,7 +3,7 @@
 ## Current Position
 - Phase: phase-2.7
 - Task: task-2.7.5
-- Status: NOT_STARTED
+- Status: IN_PROGRESS
 
 ## Progress
 
@@ -33,7 +33,7 @@
 | task-2.7.2 | COMPLETE | Added `platform/crossplane/environment/composition.yaml`; validated with `crank beta validate` and rendered a fixture `XEnvironment` to confirm one derived namespace, all three baseline NetworkPolicies, `XWebappInstance`, `XPostgresqlInstance`, and omission of the disabled `redis` component from the desired child composite set. |
 | task-2.7.3 | COMPLETE | Added `platform/crossplane/provider-kubernetes.yaml`, installed `provider-kubernetes` v0.18.0, waited for the provider CRD registration race to settle, re-ran `kubectl apply --dry-run=client -f platform/crossplane/`, and confirmed `provider-kubernetes` is Healthy plus `kubernetes-provider` exists as a cluster `ProviderConfig` using `InjectedIdentity`. |
 | task-2.7.4 | COMPLETE | Removed the invalid `spec.scope` field from the legacy `webapp` / `postgresql` / `redis` XRD artifacts, converted `platform/argocd/app-crossplane.yaml` to a multi-source Application, switched `appset-environments.yaml` to apply Environment claims into `crossplane-system`, pushed revision `d16604694c3025f9ab4cd487a9d646d93e25781d`, and validated live that `kubectl get xrd`, `kubectl get composition`, `kubectl get environmentconfig`, and `kubectl get providerconfig.kubernetes.crossplane.io` all show the repo-hosted Crossplane definitions now present in the cluster. |
-| task-2.7.5 | NOT_STARTED | |
+| task-2.7.5 | IN_PROGRESS | User approved extending scope to add the missing repo-hosted Crossplane Function packages required by the pipeline Compositions before retrying the end-to-end Environment smoke validation. |
 
 ### Phase 3: CLI Migration Tool
 | Task     | Status        | Notes |

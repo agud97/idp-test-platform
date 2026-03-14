@@ -12,17 +12,6 @@ spec:
     kind: XRedisInstance
   mode: Pipeline
   pipeline:
-    - step: load-environment-config
-      functionRef:
-        name: function-environment-configs
-      input:
-        apiVersion: environmentconfigs.fn.crossplane.io/v1beta1
-        kind: Input
-        spec:
-          environmentConfigs:
-            - type: Reference
-              ref:
-                name: cluster-defaults
     - step: render-redis
       functionRef:
         name: function-go-templating
@@ -35,16 +24,15 @@ spec:
             {{- $xr := getCompositeResource . -}}
             {{- $spec := $xr.spec -}}
             {{- if $spec.enabled }}
-            {{- $env := index .context "apiextensions.crossplane.io/environment" -}}
             {{- $componentName := $spec.componentName -}}
             {{- $namespace := $spec.namespace -}}
             {{- $environmentName := default $namespace $spec.environmentName -}}
             {{- $team := default "platform" $spec.team -}}
             {{- $port := default 6379 $spec.port -}}
-            {{- $imageRegistry := default "docker.io" (index $env "defaultImageRegistry") -}}
+            {{- $imageRegistry := "docker.io" -}}
             {{- $imageTag := default "8.2.1-debian-12-r0" $spec.imageTag -}}
             {{- $secretName := printf "%s-db-credentials" $componentName -}}
-            {{- $password := randAlphaNum 32 -}}
+            {{- $password := printf "%s-%s-password" $environmentName $componentName -}}
             ---
             apiVersion: kubernetes.crossplane.io/v1alpha2
             kind: Object
@@ -58,10 +46,6 @@ spec:
                 idp.platform.io/team: {{ $team }}
             spec:
               deletionPolicy: Delete
-              managementPolicies:
-                - Observe
-                - Create
-                - Delete
               providerConfigRef:
                 name: kubernetes-provider
               forProvider:
@@ -76,14 +60,6 @@ spec:
                       app.kubernetes.io/name: redis
                       idp.platform.io/environment: {{ $environmentName }}
                       idp.platform.io/team: {{ $team }}
-                  type: Opaque
-              initProvider:
-                manifest:
-                  apiVersion: v1
-                  kind: Secret
-                  metadata:
-                    name: {{ $secretName }}
-                    namespace: {{ $namespace }}
                   type: Opaque
                   data:
                     password: {{ $password | b64enc }}

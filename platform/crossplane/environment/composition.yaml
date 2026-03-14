@@ -24,6 +24,7 @@ spec:
             {{- $xr := getCompositeResource . -}}
             {{- $spec := $xr.spec -}}
             {{- $envName := $xr.metadata.name -}}
+            {{- if and $xr.spec.claimRef $xr.spec.claimRef.name }}{{- $envName = $xr.spec.claimRef.name -}}{{- end -}}
             {{- $team := default "platform" $spec.team -}}
             {{- $namespaceBase := regexReplaceAll "[^a-z0-9-]+" (lower (printf "env-%s-%s" $team $envName)) "-" -}}
             {{- $namespace := trimSuffix "-" (trunc 63 $namespaceBase) -}}
