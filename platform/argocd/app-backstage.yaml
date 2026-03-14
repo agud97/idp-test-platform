@@ -16,6 +16,7 @@ spec:
       helm:
         valueFiles:
           - $values/platform/backstage/helm-values.yaml
+          - $values/platform/backstage/app-config.auth.yaml
     - repoURL: https://github.com/agud97/idp-test-platform.git
       targetRevision: feature/phase-1-foundation
       ref: values
@@ -28,4 +29,3 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-

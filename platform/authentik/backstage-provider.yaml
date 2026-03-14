@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-backstage-provider
+  namespace: authentik
+  labels:
+    app.kubernetes.io/name: authentik
+    app.kubernetes.io/component: backstage-oidc
+data:
+  README: |
+    Backstage OIDC provider bootstrap for Authentik.
+
+    Required Authentik objects:
+    1. Provider: OAuth2/OpenID Provider
+       - Name: backstage
+       - Client type: Confidential
+       - Redirect URIs:
+         * http://backstage.backstage.svc.cluster.local:7007/api/auth/oidc/handler/frame
+         * http://localhost:7007/api/auth/oidc/handler/frame
+       - Signing key: default
+       - Subject mode: Based on the User's UUID
+       - Include claims for LDAP-backed groups so Backstage can derive:
+         * role: developer | qa_engineer | team_lead | platform_engineer
+         * team: team slug or empty for platform engineers
+
+    2. Application
+       - Name: backstage
+       - Slug: backstage
+       - Provider: backstage
+       - Launch URL: http://backstage.backstage.svc.cluster.local:7007
+
+    3. Secret
+       - Namespace: backstage
+       - Name: backstage-secrets
+       - Required keys:
+         * OAUTH_CLIENT_SECRET
+         * BACKSTAGE_BACKEND_AUTH_SECRET
+
+    Notes:
+    - Guest authentication must remain disabled.
+    - Platform engineers must receive role=platform_engineer and no team claim.

@@ -1,0 +1,39 @@
+upstream:
+  backstage:
+    extraAppConfig:
+      auth:
+        environment: production
+        providers:
+          oidc:
+            production:
+              metadataUrl: http://authentik-server.authentik.svc.cluster.local:9000/application/o/backstage/.well-known/openid-configuration
+              clientId: backstage
+              clientSecret: ${OAUTH_CLIENT_SECRET}
+              prompt: login
+              signIn:
+                resolvers:
+                  - resolver: emailMatchingUserEntityProfileEmail
+      backend:
+        auth:
+          keys:
+            - secret: ${BACKSTAGE_BACKEND_AUTH_SECRET}
+      signInPage: oidc
+      catalog:
+        rules:
+          - allow:
+              - Component
+              - Resource
+              - System
+              - API
+              - Location
+              - Template
+              - User
+              - Group
+      permission:
+        enabled: true
+      app:
+        experimental:
+          packages:
+            - name: '@backstage/plugin-auth-backend-module-oidc-provider'
+    extraEnvVarsSecrets:
+      - backstage-secrets

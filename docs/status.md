@@ -1,9 +1,9 @@
 # Implementation Status: IDP Test Environment Platform
 
 ## Current Position
-- Phase: phase-2
-- Task: task-2.5
-- Status: IN_PROGRESS
+- Phase: phase-4
+- Task: task-4.1
+- Status: BLOCKED
 
 ## Progress
 
@@ -23,25 +23,23 @@
 | task-2.2 | COMPLETE | Added XRedisInstance XRD and a pipeline Composition; validated with crossplane beta validate and render for enabled=true/false including correct Secret and Service naming plus empty disabled output. |
 | task-2.3 | COMPLETE | Added XWebappInstance XRD and pipeline Composition; validated replicas=3, replicas=0, enabled=false, imageTag length enforcement, and nested postgresql composite rendering. |
 | task-2.4 | COMPLETE | Added cluster-defaults EnvironmentConfig, switched compositions to EnvironmentConfig-driven defaults, validated exact kubectl dry-run for the manifest, and confirmed default injection in postgresql and webapp renders. |
-| task-2.5 | IN_PROGRESS | |
-| task-2.4 | NOT_STARTED | |
-| task-2.5 | NOT_STARTED | |
-| task-2.6 | NOT_STARTED | |
+| task-2.5 | COMPLETE | Added ArgoCD Applications and ApplicationSet manifests, bootstrapped ArgoCD on the cluster, verified platform apps/AppSet creation, generated exactly one temporary test-smoke Application from Git, and confirmed it was pruned after manifest deletion. |
+| task-2.6 | COMPLETE | Added baseline namespace isolation policies and validated live behavior: intra-namespace HTTP succeeded, cross-namespace HTTP timed out, and DNS lookup to kube-system succeeded. |
 
 ### Phase 3: CLI Migration Tool
 | Task     | Status        | Notes |
 |----------|---------------|-------|
-| task-3.1 | NOT_STARTED | |
-| task-3.2 | NOT_STARTED | |
-| task-3.3 | NOT_STARTED | |
-| task-3.4 | NOT_STARTED | |
-| task-3.5 | NOT_STARTED | |
-| task-3.6 | NOT_STARTED | |
+| task-3.1 | COMPLETE | Implemented ComposeConverter with compose-go loading, component mapping, truncation-based namespace generation, manual-review reporting, and fixture coverage at 82.5%. |
+| task-3.2 | COMPLETE | Implemented read-only LegacyExporter with compose/runtime fallback, secret redaction, partial-result handling, and tests at 95.2% coverage with no write-path behavior. |
+| task-3.3 | COMPLETE | Implemented CRD-backed EnvironmentValidator using k8s apiextensions schema validation plus duplicate-name, replicas, OCI tag, and config override checks; tests pass at 83.2% coverage. |
+| task-3.4 | COMPLETE | Wired Cobra-based migrate/export/validate commands, added root cmd/idp entrypoint, verified static build plus migrate/validate happy-path and missing-file failure handling. |
+| task-3.5 | COMPLETE | Added pure-Go SQLite tracker, lifecycle commands for register/complete/deprecate, validated the full register→validated→complete→deprecate flow including report generation and deprecated flag persistence. |
+| task-3.6 | COMPLETE | Added integration_test.go under build tag integration covering migrate→validate, 10-service mapping accuracy (9/9 mapped), retention expiry helper logic, and the register→complete→deprecate lifecycle. |
 
 ### Phase 4: Backstage Portal
 | Task     | Status        | Notes |
 |----------|---------------|-------|
-| task-4.1 | NOT_STARTED | |
+| task-4.1 | BLOCKED | Added Backstage OIDC config and ArgoCD wiring, but cluster validation is blocked because Authentik cannot start: the cluster has no StorageClass, leaving PostgreSQL/Redis PVCs Pending and preventing live OIDC login/provider verification. |
 | task-4.2 | NOT_STARTED | |
 | task-4.3 | NOT_STARTED | |
 | task-4.4 | NOT_STARTED | |
@@ -62,13 +60,13 @@
 | Phase   | Status      | Approved |
 |---------|-------------|----------|
 | phase-1 | REACHED | |
-| phase-2 | NOT_REACHED | |
-| phase-3 | NOT_REACHED | |
+| phase-2 | REACHED | |
+| phase-3 | REACHED | |
 | phase-4 | NOT_REACHED | |
 | phase-5 | NOT_REACHED | |
 
 ## Blockers
-<!-- empty if none -->
+- task-4.1: Authentik is not operational on the cluster because `authentik-postgresql-0` and `authentik-redis-master-0` are stuck on unbound PVCs; `kubectl get storageclass` returns no resources, so OIDC redirect/login validation cannot be completed.
 
 ## Deviations
 <!-- record any approved deviations from plan -->

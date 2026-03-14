@@ -2,5 +2,19 @@ authentik:
   secret_key: change-me
 postgresql:
   enabled: true
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/postgresql
+    tag: 17.6.0-debian-12-r4
+  primary:
+    persistence:
+      storageClass: openebs-hostpath
 redis:
   enabled: true
+  image:
+    registry: docker.io
+    repository: bitnami/redis
+    tag: 7.4.1-debian-12-r3
+  master:
+    persistence:
+      storageClass: openebs-hostpath
