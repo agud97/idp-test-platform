@@ -17,9 +17,14 @@ spec:
         valueFiles:
           - $values/platform/backstage/helm-values.yaml
           - $values/platform/backstage/app-config.auth.yaml
+          - $values/platform/backstage/app-config.catalog.yaml
+          - $values/platform/backstage/app-config.kubernetes.yaml
     - repoURL: https://github.com/agud97/idp-test-platform.git
       targetRevision: feature/phase-1-foundation
       ref: values
+    - repoURL: https://github.com/agud97/idp-test-platform.git
+      targetRevision: feature/phase-1-foundation
+      path: platform/backstage/rbac
   destination:
     server: https://kubernetes.default.svc
     namespace: backstage

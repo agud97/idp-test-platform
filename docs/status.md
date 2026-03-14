@@ -2,8 +2,8 @@
 
 ## Current Position
 - Phase: phase-4
-- Task: task-4.1
-- Status: BLOCKED
+- Task: task-4.2
+- Status: IN_PROGRESS
 
 ## Progress
 
@@ -39,8 +39,8 @@
 ### Phase 4: Backstage Portal
 | Task     | Status        | Notes |
 |----------|---------------|-------|
-| task-4.1 | BLOCKED | Installed OpenEBS LocalPV, restored healthy Authentik PostgreSQL/Redis/server/worker pods, corrected Backstage Helm values structure, and built a custom Backstage image overlay with `@backstage/plugin-auth-backend-module-oidc-provider`; rollout is blocked because pushing the image to GHCR fails with insufficient token scopes. |
-| task-4.2 | NOT_STARTED | |
+| task-4.1 | COMPLETE | Added Backstage OIDC config plus `auth.session.secret`, pushed a custom Backstage image with the OIDC provider module, created the Authentik provider/application and `backstage-secrets`, verified `GET /api/auth/oidc/start` returns a `302` redirect to Authentik, and validated test-user claims: `dev-alice` => `role=developer, team_id=alpha`, `platform-bob` => `role=platform_engineer, team_id=null`. |
+| task-4.2 | IN_PROGRESS | Starting Backstage catalog static locations and Kubernetes plugin wiring, including limited-reader RBAC for cluster status access. |
 | task-4.3 | NOT_STARTED | |
 | task-4.4 | NOT_STARTED | |
 | task-4.5 | NOT_STARTED | |
@@ -66,7 +66,7 @@
 | phase-5 | NOT_REACHED | |
 
 ## Blockers
-- task-4.1: A custom Backstage image with the OIDC module was built locally and validated, but `docker push ghcr.io/agud97/idp-test-platform/backstage-oidc:phase-4-task-4-1` fails with `permission_denied: The token provided does not match expected scopes`, so the cluster cannot pull the image for rollout.
+<!-- empty if none -->
 
 ## Deviations
 <!-- record any approved deviations from plan -->

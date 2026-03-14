@@ -19,9 +19,15 @@ data:
          * http://localhost:7007/api/auth/oidc/handler/frame
        - Signing key: default
        - Subject mode: Based on the User's UUID
-       - Include claims for LDAP-backed groups so Backstage can derive:
+       - Property mappings:
+         * authentik default OAuth Mapping: OpenID 'openid'
+         * authentik default OAuth Mapping: OpenID 'email'
+         * authentik default OAuth Mapping: OpenID 'profile'
+         * Backstage role claim
+         * Backstage team claim
+       - Claims derived from Authentik group membership:
          * role: developer | qa_engineer | team_lead | platform_engineer
-         * team: team slug or empty for platform engineers
+         * team_id: team slug or null for platform engineers
 
     2. Application
        - Name: backstage
@@ -35,7 +41,16 @@ data:
        - Required keys:
          * OAUTH_CLIENT_SECRET
          * BACKSTAGE_BACKEND_AUTH_SECRET
+         * AUTH_SESSION_SECRET
+
+    Test identities used for validation:
+    - dev-alice / TestPassw0rd!
+      * groups: developer, team-alpha
+      * expected claims: role=developer, team_id=alpha
+    - platform-bob / TestPassw0rd!
+      * groups: platform_engineer
+      * expected claims: role=platform_engineer, team_id=null
 
     Notes:
     - Guest authentication must remain disabled.
-    - Platform engineers must receive role=platform_engineer and no team claim.
+    - Platform engineers must receive role=platform_engineer and team_id=null.

@@ -1,0 +1,26 @@
+backstage:
+  extraEnvVars:
+    - name: K8S_SERVICE_ACCOUNT_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: backstage-k8s-sa-token
+          key: token
+    - name: K8S_CONFIG_CA_DATA
+      valueFrom:
+        secretKeyRef:
+          name: backstage-k8s-sa-token
+          key: ca.crt
+  appConfig:
+    kubernetes:
+      serviceLocatorMethod:
+        type: multiTenant
+      clusterLocatorMethods:
+        - type: config
+          clusters:
+            - name: primary
+              url: https://194.58.110.23:6443
+              authProvider: serviceAccount
+              serviceAccountToken: ${K8S_SERVICE_ACCOUNT_TOKEN}
+              caData: ${K8S_CONFIG_CA_DATA}
+              skipTLSVerify: false
+              skipMetricsLookup: true

@@ -1,0 +1,6 @@
+backstage:
+  appConfig:
+    catalog:
+      locations:
+        - type: url
+          target: https://github.com/agud97/idp-test-platform/blob/feature/phase-1-foundation/catalog/all-components.yaml
