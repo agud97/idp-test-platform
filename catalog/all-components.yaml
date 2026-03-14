@@ -39,4 +39,4 @@ metadata:
   description: Registers the self-service Backstage template for new IDP environments.
 spec:
   type: url
-  target: ../templates/new-environment/template.yaml
+  target: https://github.com/agud97/idp-test-platform/blob/4dd0139c16d6c907b743ace0cb307d4edfd3f5a2/templates/new-environment/template.yaml
