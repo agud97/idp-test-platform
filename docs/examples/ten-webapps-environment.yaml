@@ -1,0 +1,109 @@
+apiVersion: idp.platform.io/v1alpha1
+kind: Environment
+metadata:
+  name: commerce-suite
+spec:
+  owner: group:default/platform
+  team: commerce
+  components:
+    - name: storefront
+      type: webapp
+      enabled: true
+      imageRepository: ghcr.io/acme-commerce/storefront
+      imageTag: "2026.03.15"
+      replicas: 2
+      configOverrides:
+        PORT: "8080"
+        API_BASE_URL: http://api-gateway
+        LOG_LEVEL: info
+
+    - name: api-gateway
+      type: webapp
+      enabled: true
+      imageRepository: ghcr.io/acme-commerce/api-gateway
+      imageTag: 3.2.1
+      replicas: 2
+      configOverrides:
+        PORT: "8080"
+        REQUEST_TIMEOUT_MS: "5000"
+        LOG_LEVEL: info
+
+    - name: catalog-api
+      type: webapp
+      enabled: true
+      imageRepository: ghcr.io/acme-commerce/catalog-api
+      imageTag: 1.8.4
+      replicas: 2
+      configOverrides:
+        PORT: "8080"
+        CACHE_ENABLED: "true"
+
+    - name: pricing-api
+      type: webapp
+      enabled: true
+      imageRepository: ghcr.io/acme-commerce/pricing-api
+      imageTag: 2.0.3
+      replicas: 1
+      configOverrides:
+        PORT: "8080"
+        PRICE_REGION: eu
+
+    - name: inventory-api
+      type: webapp
+      enabled: true
+      imageRepository: ghcr.io/acme-commerce/inventory-api
+      imageTag: 1.5.7
+      replicas: 2
+      configOverrides:
+        PORT: "8080"
+        STOCK_CACHE_TTL: "60"
+
+    - name: checkout-api
+      type: webapp
+      enabled: true
+      imageRepository: ghcr.io/acme-commerce/checkout-api
+      imageTag: 4.1.0
+      replicas: 2
+      configOverrides:
+        PORT: "8080"
+        CHECKOUT_MODE: standard
+
+    - name: payments-api
+      type: webapp
+      enabled: true
+      imageRepository: ghcr.io/acme-commerce/payments-api
+      imageTag: 2.7.2
+      replicas: 1
+      configOverrides:
+        PORT: "8080"
+        PSP_PROVIDER: sandbox
+
+    - name: orders-api
+      type: webapp
+      enabled: true
+      imageRepository: ghcr.io/acme-commerce/orders-api
+      imageTag: 3.4.0
+      replicas: 2
+      configOverrides:
+        PORT: "8080"
+        ORDER_EVENTS_ENABLED: "true"
+
+    - name: backoffice
+      type: webapp
+      enabled: true
+      imageRepository: ghcr.io/acme-commerce/backoffice
+      imageTag: 1.3.9
+      replicas: 1
+      configOverrides:
+        PORT: "8080"
+        UI_THEME: admin
+
+    - name: reporting-ui
+      type: webapp
+      enabled: false
+      imageRepository: ghcr.io/acme-commerce/reporting-ui
+      imageTag: 0.9.0
+      replicas: 1
+      configOverrides:
+        PORT: "8080"
+        REPORTING_MODE: preview

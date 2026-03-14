@@ -10,6 +10,7 @@
 - [docs/NEXT_AGENT_RISKS_AND_RESOLVED_BLOCKERS.md](docs/NEXT_AGENT_RISKS_AND_RESOLVED_BLOCKERS.md)
 - [docs/ADDING_NEW_PLATFORM_COMPONENT_TYPE.md](docs/ADDING_NEW_PLATFORM_COMPONENT_TYPE.md)
 - [docs/NEW_COMPONENT_TYPE_PR_TEMPLATE.md](docs/NEW_COMPONENT_TYPE_PR_TEMPLATE.md)
+- [docs/ADDING_MULTIPLE_WEBAPPS.md](docs/ADDING_MULTIPLE_WEBAPPS.md)
 - [TESTING_GUIDE.md](docs/TESTING_GUIDE.md)
 - [USER_JOURNEYS.md](docs/USER_JOURNEYS.md)
 
@@ -95,6 +96,10 @@
 Если нужен готовый шаблон PR под такой change:
 - читай [NEW_COMPONENT_TYPE_PR_TEMPLATE.md](docs/NEW_COMPONENT_TYPE_PR_TEMPLATE.md)
 
+Если нужно массово добавить много новых приложений, которые уже подходят под
+`type: webapp`:
+- читай [ADDING_MULTIPLE_WEBAPPS.md](docs/ADDING_MULTIPLE_WEBAPPS.md)
+
 ### Нужны типовые сценарии от лица пользователя
 
 Читай [USER_JOURNEYS.md](docs/USER_JOURNEYS.md).
@@ -163,6 +168,8 @@
   - отдельный пошаговый guide по добавлению нового platform component type
 - [docs/NEW_COMPONENT_TYPE_PR_TEMPLATE.md](docs/NEW_COMPONENT_TYPE_PR_TEMPLATE.md)
   - готовый PR template для изменений такого типа
+- [docs/ADDING_MULTIPLE_WEBAPPS.md](docs/ADDING_MULTIPLE_WEBAPPS.md)
+  - отдельный практический guide по массовому добавлению webapp-компонентов
 - [USER_JOURNEYS.md](docs/USER_JOURNEYS.md)
   - типовые end-to-end пользовательские сценарии
 - [docs/status.md](docs/status.md)

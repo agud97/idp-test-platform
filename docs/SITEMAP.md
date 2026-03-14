@@ -85,6 +85,10 @@
   - шаблон PR для добавления нового component type
   - помогает не забыть provisioning, tests и docs
 
+- [ADDING_MULTIPLE_WEBAPPS.md](ADDING_MULTIPLE_WEBAPPS.md)
+  - подробный guide для случая, когда нужно добавить много новых приложений
+  - все они используют уже существующий type `webapp`
+
 - [USER_JOURNEYS.md](USER_JOURNEYS.md)
   - типовые end-to-end пользовательские сценарии
   - полезен для onboarding, demos и handoff
