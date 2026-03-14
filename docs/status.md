@@ -39,7 +39,7 @@
 ### Phase 4: Backstage Portal
 | Task     | Status        | Notes |
 |----------|---------------|-------|
-| task-4.1 | BLOCKED | Added Backstage OIDC config and ArgoCD wiring, but cluster validation is blocked because Authentik cannot start: the cluster has no StorageClass, leaving PostgreSQL/Redis PVCs Pending and preventing live OIDC login/provider verification. |
+| task-4.1 | BLOCKED | Installed OpenEBS LocalPV, restored healthy Authentik PostgreSQL/Redis/server/worker pods, corrected Backstage Helm values structure, and built a custom Backstage image overlay with `@backstage/plugin-auth-backend-module-oidc-provider`; rollout is blocked because pushing the image to GHCR fails with insufficient token scopes. |
 | task-4.2 | NOT_STARTED | |
 | task-4.3 | NOT_STARTED | |
 | task-4.4 | NOT_STARTED | |
@@ -66,7 +66,7 @@
 | phase-5 | NOT_REACHED | |
 
 ## Blockers
-- task-4.1: Authentik is not operational on the cluster because `authentik-postgresql-0` and `authentik-redis-master-0` are stuck on unbound PVCs; `kubectl get storageclass` returns no resources, so OIDC redirect/login validation cannot be completed.
+- task-4.1: A custom Backstage image with the OIDC module was built locally and validated, but `docker push ghcr.io/agud97/idp-test-platform/backstage-oidc:phase-4-task-4-1` fails with `permission_denied: The token provided does not match expected scopes`, so the cluster cannot pull the image for rollout.
 
 ## Deviations
 <!-- record any approved deviations from plan -->

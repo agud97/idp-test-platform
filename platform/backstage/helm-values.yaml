@@ -1,8 +1,11 @@
-upstream:
-  backstage:
-    extraAppConfig:
-      app:
-        title: IDP Platform
-      backend:
-        baseUrl: http://backstage.backstage.svc.cluster.local:7007
-
+backstage:
+  image:
+    registry: ghcr.io
+    repository: agud97/idp-test-platform/backstage-oidc
+    tag: phase-4-task-4-1
+  appConfig:
+    app:
+      title: IDP Platform
+      baseUrl: http://localhost:7007
+    backend:
+      baseUrl: http://localhost:7007
