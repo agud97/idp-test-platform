@@ -1,0 +1,8 @@
+upstream:
+  backstage:
+    extraAppConfig:
+      app:
+        title: IDP Platform
+      backend:
+        baseUrl: http://backstage.backstage.svc.cluster.local:7007
+

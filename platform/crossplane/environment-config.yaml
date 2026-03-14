@@ -1,0 +1,13 @@
+apiVersion: apiextensions.crossplane.io/v1alpha1
+kind: EnvironmentConfig
+metadata:
+  name: cluster-defaults
+  labels:
+    app.kubernetes.io/managed-by: crossplane
+    idp.platform.io/defaults: cluster
+    idp.platform.io/environment: shared
+    idp.platform.io/team: platform
+data:
+  defaultStorageClass: standard
+  defaultImageRegistry: docker.io
+  defaultReplicas: 1

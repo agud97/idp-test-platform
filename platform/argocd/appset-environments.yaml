@@ -1,0 +1,49 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: environments
+  namespace: argocd
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    idp.platform.io/environment: shared
+    idp.platform.io/team: platform
+spec:
+  goTemplate: true
+  generators:
+    - git:
+        repoURL: https://github.com/agud97/idp-test-platform.git
+        revision: feature/phase-1-foundation
+        files:
+          - path: environments/**/*.yaml
+  template:
+    metadata:
+      name: '{{ normalize (printf "%s-%s" (index .path.segments 1) (trimSuffix ".yaml" .path.filename)) }}'
+      labels:
+        app.kubernetes.io/managed-by: argocd
+        idp.platform.io/environment: '{{ trimSuffix ".yaml" .path.filename }}'
+        idp.platform.io/team: '{{ index .path.segments 1 }}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/agud97/idp-test-platform.git
+        targetRevision: feature/phase-1-foundation
+        path: '{{ .path.path }}'
+        directory:
+          recurse: false
+          include: '{{ .path.filename }}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{ normalize (printf "env-%s-%s" (index .path.segments 1) (trimSuffix ".yaml" .path.filename)) }}'
+      ignoreDifferences:
+        - group: apiextensions.crossplane.io
+          kind: CompositeResource
+          jsonPointers:
+            - /status
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - RespectIgnoreDifferences=true
+

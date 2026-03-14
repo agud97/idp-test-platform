@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform
+  namespace: argocd
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    idp.platform.io/environment: shared
+    idp.platform.io/team: platform
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/agud97/idp-test-platform.git
+    targetRevision: feature/phase-1-foundation
+    path: platform/argocd
+    directory:
+      recurse: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

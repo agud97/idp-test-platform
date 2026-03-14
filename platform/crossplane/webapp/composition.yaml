@@ -1,0 +1,239 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: webapp-composition
+  labels:
+    app.kubernetes.io/managed-by: crossplane
+    idp.platform.io/environment: shared
+    idp.platform.io/team: platform
+spec:
+  compositeTypeRef:
+    apiVersion: app.idp.platform.io/v1alpha1
+    kind: XWebappInstance
+  mode: Pipeline
+  pipeline:
+    - step: load-environment-config
+      functionRef:
+        name: function-environment-configs
+      input:
+        apiVersion: environmentconfigs.fn.crossplane.io/v1beta1
+        kind: Input
+        spec:
+          environmentConfigs:
+            - type: Reference
+              ref:
+                name: cluster-defaults
+    - step: render-webapp
+      functionRef:
+        name: function-go-templating
+      input:
+        apiVersion: gotemplating.fn.crossplane.io/v1beta1
+        kind: GoTemplate
+        source: Inline
+        inline:
+          template: |
+            {{- $xr := getCompositeResource . -}}
+            {{- $spec := $xr.spec -}}
+            {{- if $spec.enabled }}
+            {{- $env := index .context "apiextensions.crossplane.io/environment" -}}
+            {{- $componentName := $spec.componentName -}}
+            {{- $namespace := $spec.namespace -}}
+            {{- $environmentName := default $namespace $spec.environmentName -}}
+            {{- $team := default "platform" $spec.team -}}
+            {{- $port := default 8080 $spec.port -}}
+            {{- $replicas := 1 -}}
+            {{- if hasKey $env "defaultReplicas" }}{{- $replicas = index $env "defaultReplicas" -}}{{- end -}}
+            {{- if hasKey $spec "replicas" }}{{- $replicas = $spec.replicas -}}{{- end -}}
+            {{- $imageRepository := printf "%s/example/webapp" (default "docker.io" (index $env "defaultImageRegistry")) -}}
+            {{- if hasKey $spec "imageRepository" }}{{- $imageRepository = $spec.imageRepository -}}{{- end -}}
+            {{- $imageTag := default "latest" $spec.imageTag -}}
+            {{- $configMapName := printf "%s-config" $componentName -}}
+            {{- $hasDatabase := hasKey $spec "database" -}}
+            ---
+            apiVersion: kubernetes.crossplane.io/v1alpha2
+            kind: Object
+            metadata:
+              annotations:
+                {{ setResourceNameAnnotation "configmap" }}
+                gotemplating.fn.crossplane.io/ready: "True"
+              labels:
+                app.kubernetes.io/managed-by: crossplane
+                idp.platform.io/environment: {{ $environmentName }}
+                idp.platform.io/team: {{ $team }}
+            spec:
+              deletionPolicy: Delete
+              providerConfigRef:
+                name: kubernetes-provider
+              forProvider:
+                manifest:
+                  apiVersion: v1
+                  kind: ConfigMap
+                  metadata:
+                    name: {{ $configMapName }}
+                    namespace: {{ $namespace }}
+                    labels:
+                      app.kubernetes.io/managed-by: crossplane
+                      app.kubernetes.io/name: webapp
+                      app.kubernetes.io/instance: {{ $componentName }}
+                      idp.platform.io/environment: {{ $environmentName }}
+                      idp.platform.io/team: {{ $team }}
+                  data:
+                    {{- if $spec.configOverrides }}
+                    {{- range $key, $value := $spec.configOverrides }}
+                    {{ $key }}: {{ $value | quote }}
+                    {{- end }}
+                    {{- else }}
+                    APP_NAME: {{ $componentName | quote }}
+                    {{- end }}
+            ---
+            apiVersion: kubernetes.crossplane.io/v1alpha2
+            kind: Object
+            metadata:
+              annotations:
+                {{ setResourceNameAnnotation "service" }}
+                gotemplating.fn.crossplane.io/ready: "True"
+              labels:
+                app.kubernetes.io/managed-by: crossplane
+                idp.platform.io/environment: {{ $environmentName }}
+                idp.platform.io/team: {{ $team }}
+            spec:
+              deletionPolicy: Delete
+              providerConfigRef:
+                name: kubernetes-provider
+              forProvider:
+                manifest:
+                  apiVersion: v1
+                  kind: Service
+                  metadata:
+                    name: {{ $componentName }}
+                    namespace: {{ $namespace }}
+                    labels:
+                      app.kubernetes.io/managed-by: crossplane
+                      app.kubernetes.io/name: webapp
+                      app.kubernetes.io/instance: {{ $componentName }}
+                      idp.platform.io/environment: {{ $environmentName }}
+                      idp.platform.io/team: {{ $team }}
+                  spec:
+                    selector:
+                      app.kubernetes.io/name: webapp
+                      app.kubernetes.io/instance: {{ $componentName }}
+                    ports:
+                      - name: http
+                        port: {{ $port }}
+                        targetPort: {{ $port }}
+            ---
+            apiVersion: kubernetes.crossplane.io/v1alpha2
+            kind: Object
+            metadata:
+              annotations:
+                {{ setResourceNameAnnotation "deployment" }}
+                gotemplating.fn.crossplane.io/ready: "True"
+              labels:
+                app.kubernetes.io/managed-by: crossplane
+                idp.platform.io/environment: {{ $environmentName }}
+                idp.platform.io/team: {{ $team }}
+            spec:
+              deletionPolicy: Delete
+              providerConfigRef:
+                name: kubernetes-provider
+              forProvider:
+                manifest:
+                  apiVersion: apps/v1
+                  kind: Deployment
+                  metadata:
+                    name: {{ $componentName }}
+                    namespace: {{ $namespace }}
+                    labels:
+                      app.kubernetes.io/managed-by: crossplane
+                      app.kubernetes.io/name: webapp
+                      app.kubernetes.io/instance: {{ $componentName }}
+                      idp.platform.io/environment: {{ $environmentName }}
+                      idp.platform.io/team: {{ $team }}
+                  spec:
+                    replicas: {{ $replicas }}
+                    selector:
+                      matchLabels:
+                        app.kubernetes.io/name: webapp
+                        app.kubernetes.io/instance: {{ $componentName }}
+                    template:
+                      metadata:
+                        labels:
+                          app.kubernetes.io/name: webapp
+                          app.kubernetes.io/instance: {{ $componentName }}
+                          idp.platform.io/environment: {{ $environmentName }}
+                          idp.platform.io/team: {{ $team }}
+                      spec:
+                        containers:
+                          - name: webapp
+                            image: {{ printf "%s:%s" $imageRepository $imageTag }}
+                            imagePullPolicy: IfNotPresent
+                            ports:
+                              - containerPort: {{ $port }}
+                                name: http
+                            envFrom:
+                              - configMapRef:
+                                  name: {{ $configMapName }}
+                              {{- if $hasDatabase }}
+                              - secretRef:
+                                  name: {{ printf "%s-db-credentials" $componentName }}
+                              {{- end }}
+            {{- if $hasDatabase }}
+            {{- $database := $spec.database -}}
+            {{- if eq $database.engine "postgresql" }}
+            ---
+            apiVersion: database.idp.platform.io/v1alpha1
+            kind: XPostgresqlInstance
+            metadata:
+              annotations:
+                {{ setResourceNameAnnotation "database" }}
+              labels:
+                app.kubernetes.io/managed-by: crossplane
+                idp.platform.io/environment: {{ $environmentName }}
+                idp.platform.io/team: {{ $team }}
+            spec:
+              componentName: {{ $componentName }}
+              namespace: {{ $namespace }}
+              environmentName: {{ $environmentName }}
+              team: {{ $team }}
+              enabled: true
+              {{- if hasKey $database "imageTag" }}
+              imageTag: {{ $database.imageTag | quote }}
+              {{- end }}
+              {{- if hasKey $database "port" }}
+              port: {{ $database.port }}
+              {{- end }}
+            {{- else if eq $database.engine "redis" }}
+            ---
+            apiVersion: database.idp.platform.io/v1alpha1
+            kind: XRedisInstance
+            metadata:
+              annotations:
+                {{ setResourceNameAnnotation "database" }}
+              labels:
+                app.kubernetes.io/managed-by: crossplane
+                idp.platform.io/environment: {{ $environmentName }}
+                idp.platform.io/team: {{ $team }}
+            spec:
+              componentName: {{ $componentName }}
+              namespace: {{ $namespace }}
+              environmentName: {{ $environmentName }}
+              team: {{ $team }}
+              enabled: true
+              {{- if hasKey $database "imageTag" }}
+              imageTag: {{ $database.imageTag | quote }}
+              {{- end }}
+              {{- if hasKey $database "port" }}
+              port: {{ $database.port }}
+              {{- end }}
+            {{- end }}
+            {{- end }}
+            ---
+            apiVersion: app.idp.platform.io/v1alpha1
+            kind: XWebappInstance
+            status:
+              ready: true
+              serviceName: {{ $componentName }}
+            {{- end }}
+    - step: automatically-detect-ready-composed-resources
+      functionRef:
+        name: function-auto-ready

@@ -1,0 +1,6 @@
+authentik:
+  secret_key: change-me
+postgresql:
+  enabled: true
+redis:
+  enabled: true
