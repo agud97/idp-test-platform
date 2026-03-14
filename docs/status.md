@@ -40,7 +40,7 @@
 | Task     | Status        | Notes |
 |----------|---------------|-------|
 | task-4.1 | COMPLETE | Added Backstage OIDC config plus `auth.session.secret`, pushed a custom Backstage image with the OIDC provider module, created the Authentik provider/application and `backstage-secrets`, verified `GET /api/auth/oidc/start` returns a `302` redirect to Authentik, and validated test-user claims: `dev-alice` => `role=developer, team_id=alpha`, `platform-bob` => `role=platform_engineer, team_id=null`. |
-| task-4.2 | IN_PROGRESS | Investigating a task-scoped local catalog bootstrap after remote `catalog.locations` variants with GitHub integration URL, raw exact-file URL, host allowlist, location-scoped rules, and injected `GITHUB_TOKEN` still yielded zero imported entities; Kubernetes backend and RBAC remain healthy. |
+| task-4.2 | IN_PROGRESS | Retrying catalog bootstrap against the private GitHub repo using static `catalog.locations` plus explicit `integrations.github` token wiring, after confirming the mounted config and local file are present in the running Backstage pod but the catalog backend still serves zero entities. |
 | task-4.3 | NOT_STARTED | |
 | task-4.4 | NOT_STARTED | |
 | task-4.5 | NOT_STARTED | |
