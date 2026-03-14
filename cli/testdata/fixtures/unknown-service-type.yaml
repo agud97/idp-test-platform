@@ -1,0 +1,8 @@
+services:
+  mystery:
+    image: registry.example.com/proprietary/legacy-box:9.1
+    ports:
+      - "9000:9000"
+    environment:
+      FEATURE_FLAG: enabled
+

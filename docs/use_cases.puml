@@ -1,0 +1,73 @@
+@startuml Use Cases Overview
+left to right direction
+
+actor "Developer" as dev
+actor "QA Engineer" as qa
+actor "Team Lead" as lead
+actor "Platform Engineer" as pe
+
+rectangle "Environment Management" {
+    usecase "UC-001\nSubmit environment manifest" as UC001
+    usecase "UC-002\nEnable application component" as UC002
+    usecase "UC-003\nDisable application component" as UC003
+    usecase "UC-004\nProvision database alongside app" as UC004
+    usecase "UC-005\nCreate environment via portal" as UC005
+    usecase "UC-006\nBrowse environment catalog" as UC006
+    usecase "UC-007\nView environment status" as UC007
+    usecase "UC-008\nDelete environment" as UC008
+    usecase "UC-011\nIsolate environment per namespace" as UC011
+    usecase "UC-012\nOverride component configuration" as UC012
+    usecase "UC-014\nView provisioning logs" as UC014
+}
+
+rectangle "Platform Administration" {
+    usecase "UC-009\nDefine environment template" as UC009
+    usecase "UC-010\nRegister new component type" as UC010
+    usecase "UC-013\nConfigure GitOps reconciliation" as UC013
+}
+
+rectangle "Migration from Legacy Platform" {
+    usecase "UC-015\nConvert docker-compose to IDP manifest" as UC015
+    usecase "UC-016\nExport legacy environment config" as UC016
+    usecase "UC-017\nValidate migrated environment" as UC017
+    usecase "UC-018\nFollow migration runbook" as UC018
+    usecase "UC-019\nTrack migration status per team" as UC019
+}
+
+' --- Developer ---
+dev --> UC001
+dev --> UC002
+dev --> UC003
+dev --> UC004
+dev --> UC005
+dev --> UC006
+dev --> UC007
+dev --> UC008
+dev --> UC012
+dev --> UC014
+dev --> UC015
+dev --> UC017
+dev --> UC018
+
+' --- QA Engineer ---
+qa --> UC006
+qa --> UC007
+qa --> UC011
+qa --> UC017
+
+' --- Team Lead ---
+lead --> UC009
+lead --> UC006
+lead --> UC007
+
+' --- Platform Engineer ---
+pe --> UC010
+pe --> UC013
+pe --> UC016
+pe --> UC019
+
+' --- Include relationships ---
+UC002 ..> UC004 : <<include>>
+UC005 ..> UC001 : <<include>>
+
+@enduml

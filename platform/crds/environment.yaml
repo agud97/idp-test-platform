@@ -1,0 +1,98 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: environments.idp.platform.io
+spec:
+  group: idp.platform.io
+  scope: Namespaced
+  names:
+    plural: environments
+    singular: environment
+    kind: Environment
+    shortNames:
+      - env
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            spec:
+              type: object
+              required:
+                - owner
+                - team
+                - components
+              properties:
+                owner:
+                  type: string
+                  minLength: 1
+                  maxLength: 64
+                team:
+                  type: string
+                  minLength: 1
+                  maxLength: 64
+                components:
+                  type: array
+                  maxItems: 50
+                  items:
+                    type: object
+                    required:
+                      - name
+                      - type
+                      - enabled
+                    properties:
+                      name:
+                        type: string
+                        minLength: 1
+                        maxLength: 63
+                      type:
+                        type: string
+                        minLength: 1
+                        maxLength: 63
+                      enabled:
+                        type: boolean
+                      imageTag:
+                        type: string
+                        maxLength: 128
+                      replicas:
+                        type: integer
+                        minimum: 0
+                        maximum: 50
+                      configOverrides:
+                        type: object
+                        maxProperties: 64
+                        additionalProperties:
+                          type: string
+                          maxLength: 2048
+              x-kubernetes-validations:
+                - rule: "self.components.all(c, self.components.filter(x, x.name == c.name).size() == 1)"
+                  message: "Component names must be unique within an environment"
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  enum:
+                    - Synced
+                    - Progressing
+                    - Degraded
+                    - Deleting
+                lastSyncedCommit:
+                  type: string
+                  maxLength: 64
+                message:
+                  type: string
+                  maxLength: 2048
+          required:
+            - spec

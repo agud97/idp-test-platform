@@ -1,0 +1,5 @@
+*.env
+kubeconfig*
+token-*
+*-secret.yaml
+

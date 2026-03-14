@@ -1,0 +1,15 @@
+services:
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    image: ghcr.io/example/worker:latest
+    networks:
+      - custom
+    environment:
+      QUEUE_NAME: jobs
+
+networks:
+  custom:
+    driver: bridge
+

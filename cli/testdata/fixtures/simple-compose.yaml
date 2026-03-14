@@ -1,0 +1,9 @@
+services:
+  frontend:
+    image: nginx:1.27
+    ports:
+      - "8080:80"
+    environment:
+      APP_ENV: test
+      LOG_LEVEL: debug
+

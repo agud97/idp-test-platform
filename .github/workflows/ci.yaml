@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - "feature/**"
+  pull_request:
+
+jobs:
+  lint-and-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cli
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22.12"
+          cache-dependency-path: cli/go.sum
+
+      - name: Go vet
+        run: go vet ./...
+
+      - name: Go build
+        run: go build ./...
+
+  crd-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: v1.34.3
+
+      - name: Validate CRDs
+        run: kubectl apply --dry-run=client -f platform/crds/
+
+  composition-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect compositions
+        id: compositions
+        shell: bash
+        run: |
+          if find platform/crossplane -name '*.yaml' -print -quit | grep -q .; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Crossplane CLI
+        if: steps.compositions.outputs.present == 'true'
+        shell: bash
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/crossplane/crossplane/master/install.sh | sh
+          sudo mv crossplane /usr/local/bin/crossplane
+
+      - name: Validate compositions
+        if: steps.compositions.outputs.present == 'true'
+        run: crossplane beta validate platform/crossplane/...
+
+      - name: Skip empty crossplane tree
+        if: steps.compositions.outputs.present != 'true'
+        run: echo "No Crossplane compositions present yet; skipping validation."
+

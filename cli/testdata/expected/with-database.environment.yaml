@@ -1,0 +1,25 @@
+apiVersion: idp.platform.io/v1alpha1
+kind: Environment
+metadata:
+  name: with-database
+spec:
+  owner: fixture-user
+  team: fixture-team
+  components:
+    - name: api
+      type: webapp
+      enabled: true
+      imageTag: v1.4.2
+      replicas: 1
+      configOverrides:
+        DB_HOST: db
+        DB_NAME: app
+        DB_USER: appuser
+    - name: db
+      type: postgresql
+      enabled: true
+      imageTag: "16"
+      replicas: 1
+      configOverrides:
+        POSTGRES_DB: app
+        POSTGRES_USER: appuser

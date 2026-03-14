@@ -1,0 +1,17 @@
+apiVersion: idp.platform.io/v1alpha1
+kind: Environment
+metadata:
+  name: simple-compose
+spec:
+  owner: fixture-user
+  team: fixture-team
+  components:
+    - name: frontend
+      type: webapp
+      enabled: true
+      imageTag: "1.27"
+      replicas: 1
+      configOverrides:
+        APP_ENV: test
+        LOG_LEVEL: debug
+

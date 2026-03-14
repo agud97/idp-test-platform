@@ -1,0 +1,844 @@
+plan:
+  name: "IDP Test Environment Platform"
+  description: >
+    End-to-end implementation plan for the GitOps-based Internal Developer Platform.
+    Covers CRD + Crossplane infrastructure, CLI migration tooling, Backstage portal,
+    and a full acceptance test suite.
+  constraints_check:
+    phases: 5       # limit: 5  ✓
+    max_tasks_per_phase: 7  # limit: 7  ✓
+    all_tasks_have_validation: true  # ✓
+    all_phases_have_checkpoint: true  # ✓
+
+  # ── AGENT BOOTSTRAP ──────────────────────────────────────────────
+  # Everything the executing agent needs to access Git and the cluster.
+  # Secrets are stored as local files — never committed to the repo.
+  # ─────────────────────────────────────────────────────────────────
+  environment:
+
+    # -- Git / GitHub -------------------------------------------------
+    git:
+      provider: github
+      org: agud97
+      repo: idp-test-platform
+      remote_url: "https://github.com/agud97/idp-test-platform.git"
+      local_clone: "~/codex/idp-test-platform"
+      default_branch: main
+      token_file: "/root/codex/token-gh"           # PAT with repo + workflow scopes
+      # How to configure git for commits:
+      setup: |
+        export GITHUB_TOKEN=$(cat /root/codex/token-gh)
+        git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+      # How to verify access:
+      verify: "curl -s -H \"Authorization: Bearer $(cat /root/codex/token-gh)\" https://api.github.com/repos/agud97/idp-test-platform | python3 -c \"import sys,json; print(json.load(sys.stdin)['full_name'])\""
+
+    # -- Kubernetes cluster -------------------------------------------
+    kubernetes:
+      api_server: "https://194.58.110.23:6443"
+      kubeconfig: "/root/codex/kubeconfig_6144665"
+      version: "v1.34.2"
+      nodes: 3
+      os: "Rocky Linux 9.6"
+      runtime: "containerd 2.2.0"
+      # How to configure kubectl:
+      setup: |
+        export KUBECONFIG=/root/codex/kubeconfig_6144665
+      # How to verify access:
+      verify: "kubectl --kubeconfig /root/codex/kubeconfig_6144665 get nodes"
+      # Known cluster details:
+      notes:
+        - "API server real endpoint is 194.58.110.23:6443 (confirmed via: kubectl get endpoints kubernetes -n default)"
+        - "Use this IP for NetworkPolicy ipBlock rules — ClusterIP 10.96.0.1 does NOT work"
+        - "v1 Endpoints deprecated in K8s 1.33+, use EndpointSlice for new code"
+        - "Clean cluster — no existing platform services deployed yet"
+
+    # -- Environment variables required by each phase -----------------
+    # Agent must export these before running any task validation commands.
+    required_env:
+      - name: KUBECONFIG
+        value_from_file: "/root/codex/kubeconfig_6144665"
+        used_by: [phase-2, phase-3, phase-5]
+      - name: GITHUB_TOKEN
+        value_from_file: "/root/codex/token-gh"
+        used_by: [phase-1, phase-4]
+      - name: GIT_REPO_URL
+        value: "https://github.com/agud97/idp-test-platform.git"
+        used_by: [phase-1, phase-2, phase-4]
+      - name: GIT_LOCAL_PATH
+        value: "~/codex/idp-test-platform"
+        used_by: [phase-1, phase-2, phase-3, phase-4, phase-5]
+
+    # -- Platform installation strategy: GitOps-only ---------------------
+    # ArgoCD is the SOLE deployment engine. All platform services (Crossplane,
+    # Backstage, Authentik) are installed via ArgoCD Application manifests
+    # committed to platform/argocd/ — never via direct helm/kubectl commands.
+    # The only manual bootstrap step is the initial ArgoCD installation itself.
+    existing_services:
+      note: "Clean cluster — no platform services pre-installed. All services except ArgoCD are installed via GitOps."
+
+      # Step 1 — MANUAL BOOTSTRAP (one-time only, run by agent in phase-2 setup)
+      # ArgoCD cannot install itself; this is the sole imperative step.
+      bootstrap:
+        - name: argocd
+          namespace: argocd
+          reason: "ArgoCD must exist before it can manage anything via GitOps"
+          install: |
+            kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
+            kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v2.10.x/manifests/install.yaml
+          wait: "kubectl wait --for=condition=Available deployment/argocd-server -n argocd --timeout=300s"
+          verify: "kubectl get pods -n argocd"
+
+      # Step 2 — GITOPS INSTALL (commit manifests; ArgoCD syncs automatically)
+      # Each entry describes the ArgoCD Application file to create in platform/argocd/.
+      # After bootstrap, agent commits these files and applies the root app-of-apps
+      # (platform/argocd/app-platform.yaml) once — ArgoCD handles everything else.
+      gitops_install:
+        - name: crossplane
+          argocd_app_file: "platform/argocd/app-crossplane.yaml"
+          namespace: crossplane-system
+          source:
+            repoURL: "https://charts.crossplane.io/stable"
+            chart: crossplane
+            targetRevision: "1.14.x"
+          notes:
+            - "Crossplane providers (kubernetes, helm) are installed as separate ArgoCD apps"
+            - "Wait for crossplane-system pods Ready before phase-2 Composition tasks"
+
+        - name: backstage
+          argocd_app_file: "platform/argocd/app-backstage.yaml"
+          namespace: backstage
+          source:
+            repoURL: "https://backstage.github.io/charts"
+            chart: backstage
+            targetRevision: "2.6.3"
+            valueFiles: ["platform/backstage/helm-values.yaml"]
+          notes:
+            - "Use bitnamilegacy/postgresql:16 image (not bitnami — returns 403 on this cluster)"
+            - "Migration race: if 2 pods start simultaneously → duplicate key on knex_migrations"
+            - "Secret backstage-secrets must be created manually before first sync"
+
+        - name: authentik
+          argocd_app_file: "platform/argocd/app-authentik.yaml"
+          namespace: authentik
+          source:
+            repoURL: "https://charts.goauthentik.io"
+            chart: authentik
+            targetRevision: "2025.2.1"
+            valueFiles: ["platform/authentik/helm-values.yaml"]
+          notes:
+            - "Use bitnamilegacy/postgresql and bitnamilegacy/redis images (not bitnami)"
+            - "Remove top-level service: from helm-values (deprecated in 2025.2.x)"
+
+      # Step 3 — ROOT APPLICATION (apply once after ArgoCD bootstrap)
+      # platform/argocd/app-platform.yaml is the app-of-apps entry point.
+      # It watches platform/argocd/ and manages all other platform Applications.
+      root_app:
+        file: "platform/argocd/app-platform.yaml"
+        apply_command: "kubectl apply -f platform/argocd/app-platform.yaml -n argocd"
+        note: >
+          Apply this ONE time after ArgoCD bootstrap. All subsequent changes
+          (adding/removing services) are done by committing to platform/argocd/ in Git.
+
+    # -- Conventions for new resources --------------------------------
+    naming:
+      gitops_environments_path: "environments/<team>/<env-name>.yaml"
+      platform_path: "platform/"
+      argocd_platform_apps_path: "platform/argocd/"   # ArgoCD Applications for platform services (Crossplane, Backstage, Authentik) + AppSet
+      argocd_env_apps_path: "applications/"            # Reserved for app-of-apps style env Applications if needed
+      catalog_path: "catalog/"
+      templates_path: "templates/"
+      namespace_pattern: "env-<team[:20]>-<envname[:N]>-<hash4>"  # max 63 chars
+
+  phases:
+
+    # ─────────────────────────────────────────────────────────────────
+    - id: phase-1
+      name: "Project Foundation"
+      description: >
+        Establish the repository layout, Go module skeleton, CRD schema,
+        test fixtures, and CI pipeline. All downstream phases depend on
+        the directory structure and CRD produced here.
+
+      tasks:
+
+        - id: task-1.1
+          name: "Scaffold repository structure"
+          description: >
+            Create the top-level directory tree defined in constraints.md §1.1:
+            platform/crds/, platform/crossplane/, platform/argocd/,
+            platform/networkpolicies/, environments/, catalog/, templates/,
+            cli/, docs/. Add .gitignore excluding *.env, kubeconfig*, token-*,
+            *-secret.yaml. Add root README.md.
+          artifact: "Repository root with all directories + .gitignore"
+          depends_on: []
+          validation: >
+            Run `find . -type d | sort` and verify every path from
+            constraints.md §1.1 exists. Run `git status` to confirm
+            .gitignore suppresses a test kubeconfig file.
+
+        - id: task-1.2
+          name: "Define Environment CRD"
+          description: >
+            Write platform/crds/environment.yaml — CRD for
+            idp.platform.io/v1alpha1/Environment. Include: spec fields
+            (owner, team, components[]{name, type, enabled, imageTag,
+            replicas 0-50, configOverrides}), status subresource
+            (phase, lastSyncedCommit, message), OpenAPI v3 schema,
+            and CEL validation rule enforcing unique component names.
+          artifact: "platform/crds/environment.yaml"
+          depends_on: [task-1.1]
+          validation: >
+            `kubectl apply --dry-run=client -f platform/crds/environment.yaml`
+            exits 0. Apply a test CR with duplicate component names and
+            confirm the CEL rule rejects it.
+
+        - id: task-1.3
+          name: "Initialise Go CLI module"
+          description: >
+            Initialise the Go module at cli/ with module path
+            github.com/<org>/idp-platform/cli. Create cmd/ subdirectories
+            (migrate/, export/, validate/, register/, complete/, deprecate/).
+            Create pkg/ packages (converter/, exporter/, validator/) each
+            with their interface definitions from constraints.md §2.5:
+            ComposeConverter, LegacyExporter, EnvironmentValidator.
+            Create internal/ for shared helpers. Add go.mod with required
+            dependencies: sigs.k8s.io/yaml, compose-spec/compose-go,
+            spf13/cobra, k8s.io/apiextensions-apiserver, stretchr/testify.
+          artifact: "cli/go.mod + cli/pkg/*/interface.go files"
+          depends_on: [task-1.1]
+          validation: >
+            `cd cli && go build ./...` exits 0 with no errors.
+            Each pkg/ package compiles and exports its interface type.
+
+        - id: task-1.4
+          name: "Create CLI test fixtures"
+          description: >
+            Create cli/testdata/fixtures/ with five docker-compose fixture
+            files required by constraints.md §5.1:
+            simple-compose.yaml (1 service, port, env vars),
+            with-database.yaml (webapp + postgresql dependency),
+            unsupported-features.yaml (build: directive, custom network),
+            unknown-service-type.yaml (service with no catalog match),
+            empty-compose.yaml (services block present but empty).
+            Also create cli/testdata/expected/ with the expected IDP YAML
+            output for simple-compose.yaml and with-database.yaml.
+          artifact: "cli/testdata/fixtures/*.yaml + cli/testdata/expected/*.yaml"
+          depends_on: [task-1.2, task-1.3]
+          validation: >
+            All five fixture files parse successfully with
+            `compose-go` loader. Expected output files are valid
+            Environment CRs (validate against CRD schema).
+
+        - id: task-1.5
+          name: "Create CI pipeline skeleton"
+          description: >
+            Create .github/workflows/ci.yaml with three jobs:
+            (1) lint-and-build: go vet + go build ./... on cli/,
+            (2) crd-validate: kubectl apply --dry-run=client on platform/crds/,
+            (3) composition-validate: crossplane beta validate on platform/crossplane/.
+            Create .github/workflows/load-test.yaml (manual trigger only)
+            as placeholder for the 50-environment concurrency job.
+          artifact: ".github/workflows/ci.yaml + .github/workflows/load-test.yaml"
+          depends_on: [task-1.3]
+          validation: >
+            Push to a feature branch and confirm the ci.yaml workflow
+            appears in GitHub Actions. All three jobs complete (may skip
+            composition-validate if platform/crossplane/ is still empty).
+
+      checkpoint:
+        description: >
+          Human review: verify the repo structure matches the architecture
+          before any platform infrastructure is provisioned.
+        criteria:
+          - "Directory tree matches constraints.md §1.1 exactly"
+          - "CRD schema covers all entity_model.md ENVIRONMENT fields"
+          - "Go interfaces match constraints.md §2.5 signatures exactly"
+          - "CEL uniqueness rule rejects duplicate component names"
+          - "CI pipeline runs and produces green build on main"
+
+    # ─────────────────────────────────────────────────────────────────
+    - id: phase-2
+      name: "Platform Infrastructure"
+      description: >
+        Implement all Kubernetes-side infrastructure: Crossplane Compositions
+        for each component type, ArgoCD ApplicationSet, and baseline
+        NetworkPolicy templates. After this phase the platform can provision
+        real environments from committed YAML manifests.
+
+      tasks:
+
+        - id: task-2.1
+          name: "Crossplane XRD + Composition: postgresql"
+          description: >
+            Write platform/crossplane/postgresql/xrd.yaml (XPostgresqlInstance)
+            and platform/crossplane/postgresql/composition.yaml.
+            Composition must: create Deployment + Service + PVC using
+            bitnamilegacy/postgresql:16, generate credentials Secret named
+            <component>-db-credentials via an InitProvider, set namespace
+            from parent ENVIRONMENT.namespace (denormalised field),
+            handle enabled=false by setting deletionPolicy:Delete on all
+            managed resources, and be idempotent.
+          artifact: "platform/crossplane/postgresql/xrd.yaml + composition.yaml"
+          depends_on: [task-1.2]
+          validation: >
+            `crossplane beta validate platform/crossplane/postgresql/`.
+            Run `crossplane beta render` with a fixture XR input and assert
+            the output contains Deployment, Service, PVC, and Secret with
+            correct naming. Run with enabled=false and assert no resources
+            in output.
+
+        - id: task-2.2
+          name: "Crossplane XRD + Composition: redis"
+          description: >
+            Write platform/crossplane/redis/xrd.yaml (XRedisInstance) and
+            platform/crossplane/redis/composition.yaml using
+            bitnamilegacy/redis:8.2.1-debian-12-r0. Same enabled/disabled
+            contract as postgresql Composition. Credentials Secret named
+            <component>-db-credentials.
+          artifact: "platform/crossplane/redis/xrd.yaml + composition.yaml"
+          depends_on: [task-2.1]
+          validation: >
+            `crossplane beta validate platform/crossplane/redis/`.
+            `crossplane beta render` with enabled=true fixture produces
+            Deployment + Service + Secret. With enabled=false produces
+            empty resource list.
+
+        - id: task-2.3
+          name: "Crossplane XRD + Composition: webapp"
+          description: >
+            Write platform/crossplane/webapp/xrd.yaml (XWebappInstance) and
+            platform/crossplane/webapp/composition.yaml. This is the generic
+            application component type. Provisions: Deployment + Service +
+            ConfigMap. Supports imageTag and replicas overrides (0-50).
+            replicas=0 scales to zero but keeps Deployment resource.
+            enabled=false triggers deletionPolicy:Delete on all resources.
+            If component_type.supports_database=true, references
+            XDatabaseInstance nested composite resource.
+          artifact: "platform/crossplane/webapp/xrd.yaml + composition.yaml"
+          depends_on: [task-2.1, task-2.2]
+          validation: >
+            `crossplane beta render` with replicas=3 produces Deployment
+            with replicas:3. With replicas=0 produces Deployment with
+            replicas:0 (resource present). With enabled=false produces
+            empty resource list. CRD schema validates imageTag max 128 chars.
+
+        - id: task-2.4
+          name: "Crossplane EnvironmentConfig for cluster defaults"
+          description: >
+            Write platform/crossplane/environment-config.yaml defining
+            cluster-wide defaults injected into all Compositions:
+            defaultStorageClass, defaultImageRegistry, defaultReplicas.
+            Compositions must reference this EnvironmentConfig via
+            environmentConfigRef rather than hardcoding values.
+          artifact: "platform/crossplane/environment-config.yaml"
+          depends_on: [task-2.1, task-2.2, task-2.3]
+          validation: >
+            `kubectl apply --dry-run=client -f platform/crossplane/environment-config.yaml`
+            exits 0. `crossplane beta render` for any composition using
+            the EnvironmentConfig ref produces correct default values.
+
+        - id: task-2.5
+          name: "ArgoCD ApplicationSet + platform Application manifests"
+          description: >
+            All ArgoCD manifests live in platform/argocd/. Write the following files:
+
+            (1) platform/argocd/app-platform.yaml — root app-of-apps Application
+            watching path platform/argocd/, selfHeal=true, prune=true. This is
+            the single file applied manually after ArgoCD bootstrap; it manages
+            all other Applications automatically.
+
+            (2) platform/argocd/app-crossplane.yaml — ArgoCD Application installing
+            Crossplane from https://charts.crossplane.io/stable chart v1.14.x into
+            crossplane-system namespace. syncPolicy automated, CreateNamespace=true.
+
+            (3) platform/argocd/app-backstage.yaml — ArgoCD Application installing
+            backstage/backstage chart v2.6.3 into backstage namespace with
+            valueFiles: [platform/backstage/helm-values.yaml].
+
+            (4) platform/argocd/app-authentik.yaml — ArgoCD Application installing
+            authentik/authentik chart v2025.2.1 into authentik namespace with
+            valueFiles: [platform/authentik/helm-values.yaml].
+
+            (5) platform/argocd/appset-environments.yaml — ArgoCD ApplicationSet
+            using the git files generator with glob `environments/**/*.yaml`.
+            Template must include: syncPolicy.automated.prune=true, selfHeal=true,
+            syncOptions=[CreateNamespace=true, RespectIgnoreDifferences=true],
+            ignoreDifferences for Crossplane CompositeResource /status.
+
+            Helm values stubs: platform/backstage/helm-values.yaml and
+            platform/authentik/helm-values.yaml (populated in phase-3/4 tasks).
+          artifact: >
+            platform/argocd/app-platform.yaml,
+            platform/argocd/app-crossplane.yaml,
+            platform/argocd/app-backstage.yaml,
+            platform/argocd/app-authentik.yaml,
+            platform/argocd/appset-environments.yaml,
+            platform/backstage/helm-values.yaml (stub),
+            platform/authentik/helm-values.yaml (stub)
+          depends_on: [task-1.2, task-2.3]
+          validation: >
+            `kubectl apply --dry-run=client -f platform/argocd/` exits 0 for all files.
+            Bootstrap sequence: apply platform/argocd/app-platform.yaml to the cluster;
+            verify ArgoCD creates Applications: crossplane, backstage, authentik, and the
+            environments AppSet. Commit environments/test/smoke.yaml and verify ArgoCD
+            creates exactly one Application named test-smoke. Delete the file and verify
+            the Application is pruned (prune=true).
+
+        - id: task-2.6
+          name: "Baseline NetworkPolicy templates"
+          description: >
+            Write three NetworkPolicy templates in platform/networkpolicies/:
+            (1) deny-cross-namespace-ingress.yaml — denies all ingress from
+            other namespaces,
+            (2) allow-intra-namespace.yaml — allows all pod-to-pod traffic
+            within the same namespace,
+            (3) allow-dns-egress.yaml — permits UDP/TCP port 53 egress to
+            kube-system. These are applied automatically via the Crossplane
+            webapp Composition to every environment namespace.
+          artifact: >
+            platform/networkpolicies/deny-cross-namespace-ingress.yaml +
+            allow-intra-namespace.yaml + allow-dns-egress.yaml
+          depends_on: [task-2.3]
+          validation: >
+            Apply all three policies to a test namespace. Exec into a test
+            pod in namespace A and attempt `curl` to a service in namespace B
+            — connection must be refused (AC-019). Intra-namespace curl
+            must succeed (AC-042). DNS lookup (nslookup) must succeed.
+
+      checkpoint:
+        description: >
+          Human review: verify the full provisioning loop works end-to-end
+          on a real cluster before building application-layer tooling.
+        criteria:
+          - "Commit a 2-component environment YAML → both reach Running within 5 min (AC-001)"
+          - "Set one component enabled:false → its resources deleted within 3 min (AC-005)"
+          - "Manually delete a resource → ArgoCD restores it within 3 min (AC-037)"
+          - "Cross-namespace pod connection is refused by NetworkPolicy (AC-019)"
+          - "crossplane beta validate passes for all three Compositions"
+
+    # ─────────────────────────────────────────────────────────────────
+    - id: phase-3
+      name: "CLI Migration Tool"
+      description: >
+        Implement the full Go CLI: docker-compose converter, legacy config
+        exporter, environment validator, and migration lifecycle commands
+        (register, complete, deprecate). Include unit tests to 80% coverage.
+
+      tasks:
+
+        - id: task-3.1
+          name: "Implement pkg/converter"
+          description: >
+            Implement ComposeConverter in cli/pkg/converter/converter.go.
+            Must: parse compose-spec v1.0+ and v2.x via compose-go loader,
+            map each service to a ComponentType by name lookup, produce
+            EnvironmentManifest + ConversionReport, apply the "correctly
+            mapped" definition from constraints.md §5.2 (image, ports,
+            env vars, volumes, depends_on), mark unmatched services as
+            enabled:false with TODO comment, apply namespace truncation
+            rule (env-<team[:20]>-<name[:N]>-<hash4>), never modify the
+            input io.Reader.
+          artifact: "cli/pkg/converter/converter.go + converter_test.go"
+          depends_on: [task-1.3, task-1.4]
+          validation: >
+            `go test ./pkg/converter/... -cover` passes with ≥80% coverage.
+            Test against all five testdata fixtures. simple-compose fixture
+            output matches testdata/expected/simple-compose-expected.yaml.
+            Verify input bytes unchanged after conversion (AC-053).
+
+        - id: task-3.2
+          name: "Implement pkg/exporter"
+          description: >
+            Implement LegacyExporter in cli/pkg/exporter/exporter.go.
+            Must: connect to legacy environment via API or container
+            inspection fallback (when compose file inaccessible), extract
+            service names/images/ports/env vars/volumes/dependencies,
+            redact values whose keys match PASSWORD|SECRET|KEY|TOKEN pattern
+            with <REDACTED> and list them in ExportSummary.redacted,
+            mark fields as "inferred from runtime" when sourced from
+            container metadata, never send write-type requests to legacy
+            environment, return partial results when access is restricted.
+          artifact: "cli/pkg/exporter/exporter.go + exporter_test.go"
+          depends_on: [task-1.3, task-1.4]
+          validation: >
+            `go test ./pkg/exporter/... -cover` passes with ≥80% coverage.
+            Test with mocked client: DB_PASSWORD value must be <REDACTED>
+            in output (AC-059). Partial access mock returns accessible
+            services + inaccessible list in summary. No write calls on
+            mocked client.
+
+        - id: task-3.3
+          name: "Implement pkg/validator"
+          description: >
+            Implement EnvironmentValidator in cli/pkg/validator/validator.go.
+            Must: validate EnvironmentManifest against the CRD OpenAPI schema
+            (using k8s.io/apiextensions-apiserver), check component name
+            uniqueness within environment, validate replicas range 0-50,
+            validate imageTag OCI format, validate configOverrides keys
+            against ComponentType's known keys, return []ValidationError
+            with field path and human-readable message per error.
+          artifact: "cli/pkg/validator/validator.go + validator_test.go"
+          depends_on: [task-1.2, task-1.3]
+          validation: >
+            `go test ./pkg/validator/... -cover` passes with ≥80% coverage.
+            Manifest with replicas=51 returns error with message containing
+            "0–50" (AC-011). Manifest with duplicate component names returns
+            error. Valid manifest returns empty []ValidationError.
+
+        - id: task-3.4
+          name: "Implement CLI commands: migrate, export, validate"
+          description: >
+            Wire cobra commands in cmd/ using the pkg/ implementations.
+            cmd/migrate: reads --from file, writes --output file, prints
+            ConversionReport, adds `# Source: idp-migrate` header.
+            cmd/export: reads --name and --team, writes --output file,
+            prints ExportSummary.
+            cmd/validate: reads --file, prints ValidationErrors or "Valid".
+            All commands: use log/slog for non-user output, no global state,
+            build as statically linked binary (CGO_ENABLED=0).
+          artifact: "cli/cmd/migrate/cmd.go + cmd/export/cmd.go + cmd/validate/cmd.go"
+          depends_on: [task-3.1, task-3.2, task-3.3]
+          validation: >
+            `CGO_ENABLED=0 go build -o idp ./cmd/idp` exits 0.
+            `./idp migrate --from testdata/fixtures/simple-compose.yaml
+            --output /tmp/out.yaml` produces a valid Environment YAML.
+            `./idp validate --file /tmp/out.yaml` prints "Valid".
+            `./idp migrate --from nonexistent.yaml` exits 1 with
+            "File not found" (AC-056).
+
+        - id: task-3.5
+          name: "Implement CLI commands: register-legacy, complete-migration, deprecate-legacy"
+          description: >
+            Implement migration lifecycle commands backed by a local SQLite
+            tracker database (~/.idp/tracker.db) using LEGACY_ENVIRONMENT
+            schema from entity_model.md.
+            idp register-legacy --name --team [--compose-path]: creates record
+            with migration_status:pending (AC-073/074/075).
+            idp complete-migration --env-id: validates status=validated then
+            sets completed+completed_at (AC-076/077).
+            idp deprecate-legacy [--dry-run] [--confirm]: gate check, generates
+            deprecation-report-<date>.md (AC-078/079/080).
+          artifact: >
+            cli/cmd/register/cmd.go + cli/cmd/complete/cmd.go +
+            cli/cmd/deprecate/cmd.go + cli/internal/tracker/db.go
+          depends_on: [task-3.4]
+          validation: >
+            Integration test sequence: register → validate status=pending →
+            complete-migration fails (status not validated) → manually set
+            status=validated → complete-migration succeeds → deprecate-legacy
+            --dry-run shows gate passed → deprecate-legacy --confirm writes
+            report file. All AC-073–080 pass.
+
+        - id: task-3.6
+          name: "CLI integration tests"
+          description: >
+            Write cli/integration_test.go (build tag: integration). Tests:
+            (1) full pipeline: simple-compose.yaml → convert → validate
+            against CRD schema → assert output matches expected fixture.
+            (2) accuracy test: 10-service fixture → assert ≥9 services
+            correctly mapped per the "correctly mapped" definition
+            (constraints.md §5.2).
+            (3) retention test: insert backdated event with LOG_RETENTION_DAYS=0
+            → assert event unavailable.
+            (4) migration lifecycle: register → complete → deprecate gate.
+          artifact: "cli/integration_test.go"
+          depends_on: [task-3.5]
+          validation: >
+            `go test -tags integration ./... -v` passes all cases.
+            The 10-service accuracy fixture reports exactly which services
+            failed mapping and the count is ≥9 (AC-052).
+
+      checkpoint:
+        description: >
+          Human review: verify CLI tool handles the real legacy platform
+          before Backstage integration begins.
+        criteria:
+          - "idp migrate on a real legacy docker-compose.yml produces valid Environment YAML"
+          - "idp export on a real (or representative mock) legacy environment redacts secrets"
+          - "go test ./... -cover reports ≥80% on all pkg/ packages"
+          - "idp deprecate-legacy --dry-run correctly gates on incomplete migrations"
+          - "CLI binary is statically linked and runs without cluster access"
+
+    # ─────────────────────────────────────────────────────────────────
+    - id: phase-4
+      name: "Backstage Portal"
+      description: >
+        Configure Backstage: OIDC auth via Authentik, static catalog,
+        Kubernetes plugin, scaffolder template for environment creation,
+        migration dashboard plugin, and TechDocs runbooks.
+
+      tasks:
+
+        - id: task-4.1
+          name: "Backstage authentication: Authentik OIDC"
+          description: >
+            Configure Backstage app-config.yaml with auth.providers.oidc
+            pointing to Authentik at
+            http://authentik-server.authentik.svc.cluster.local:9000/application/o/backstage/.
+            Map LDAP group membership claims to platform roles
+            (developer, qa_engineer, team_lead, platform_engineer).
+            Disable guest auth. Create the Authentik OAuth2 provider
+            application for Backstage. Store OAUTH_CLIENT_SECRET in
+            Kubernetes Secret open-webui-sso pattern (Secret backstage-secrets,
+            key OAUTH_CLIENT_SECRET) in backstage namespace.
+          artifact: "platform/backstage/app-config.auth.yaml + Authentik provider config"
+          depends_on: [task-1.1]
+          validation: >
+            Port-forward Backstage to localhost:7007. Navigate to
+            http://localhost:7007 — redirect to Authentik login page.
+            Log in as a test developer user → Backstage shows correct
+            username and role. Platform engineer user has team_id=null
+            and sees all catalog entries (AC-026).
+
+        - id: task-4.2
+          name: "Backstage catalog and Kubernetes plugin"
+          description: >
+            Configure static catalog.locations in app-config.yaml pointing
+            to catalog/ directory. Write catalog/all-components.yaml as
+            an initial catalog entry. Configure @backstage/plugin-kubernetes
+            with cluster endpoint https://194.58.110.52:6443, authProvider
+            serviceAccount, token from Secret backstage-k8s-sa-token.
+            Create SA backstage-k8s-reader + ClusterRole (get/list/watch
+            pods, deployments, replicasets, services) + ClusterRoleBinding.
+          artifact: >
+            platform/backstage/app-config.catalog.yaml +
+            platform/backstage/app-config.kubernetes.yaml +
+            platform/backstage/rbac/backstage-k8s-reader.yaml +
+            catalog/all-components.yaml
+          depends_on: [task-4.1]
+          validation: >
+            `kubectl apply --dry-run=client -f platform/backstage/rbac/`
+            exits 0. Navigate to Backstage catalog and verify
+            catalog/all-components.yaml entry appears. Open an environment
+            component and verify Kubernetes tab shows live pod status (AC-028).
+
+        - id: task-4.3
+          name: "Backstage scaffolder template: New Environment"
+          description: >
+            Write templates/new-environment/template.yaml — Backstage
+            scaffolder template that: collects parameters (environment_name,
+            team, component selections with enabled toggle, imageTag overrides),
+            uses ${{ values.* }} substitution syntax, renders skeleton YAML
+            at skeleton/environments/${{ values.team }}/${{ values.env_name }}.yaml,
+            commits generated file to Git via publish:github action,
+            registers the new environment in catalog via catalog:register.
+            Parameters must be typed (string/integer/boolean) and stored
+            in template_yaml + parameters fields per entity_model.md.
+          artifact: >
+            templates/new-environment/template.yaml +
+            templates/new-environment/skeleton/environments/.../env.yaml
+          depends_on: [task-1.2, task-4.2]
+          validation: >
+            In Backstage, fill the New Environment form with valid values
+            and submit. Verify: YAML file committed to environments/ in Git,
+            catalog entry created, ArgoCD picks up the new environment
+            (AC-020). Submit with empty required field → form shows
+            field-level error, nothing committed (AC-021).
+
+        - id: task-4.4
+          name: "Migration dashboard: backend plugin"
+          description: >
+            Implement Backstage backend plugin at
+            packages/backend/src/plugins/migrationDashboard.ts.
+            Expose GET /api/migration/status returning JSON:
+            { teams: [{ name, total, completed, validated, inProgress,
+            pending, blocked, percentage }] }.
+            Data source: aggregate LEGACY_ENVIRONMENT records from tracker
+            (SQLite or REST call to CLI tracker service). Refreshed on each
+            request; no server-side caching older than 60s.
+          artifact: "packages/backend/src/plugins/migrationDashboard.ts"
+          depends_on: [task-3.5, task-4.2]
+          validation: >
+            `curl http://localhost:7007/api/migration/status` returns JSON
+            with correct team aggregates. Register 3 legacy environments,
+            set 2 to completed → percentage = 66%. Add a new registration
+            → total increases by 1 (AC-065).
+
+        - id: task-4.5
+          name: "Migration dashboard: frontend plugin"
+          description: >
+            Implement @internal/plugin-migration-dashboard React plugin at
+            packages/app/src/components/MigrationDashboard/.
+            Route: /migration. Renders a table of teams with columns:
+            Team, Total, Completed, Validated, In Progress, Blocked, %.
+            Fetches from GET /api/migration/status every 60 seconds.
+            Shows "Gate PASSED" banner when all environments = completed.
+          artifact: "packages/app/src/components/MigrationDashboard/index.tsx"
+          depends_on: [task-4.4]
+          validation: >
+            Navigate to http://localhost:7007/migration — table renders
+            with correct data. Wait 61 seconds without action — table
+            refreshes automatically. When all environments completed,
+            "Gate PASSED" banner is visible.
+
+        - id: task-4.6
+          name: "TechDocs migration runbooks"
+          description: >
+            Write docs/runbooks/ directory with one runbook per application
+            type identified during legacy registration. Minimum set:
+            webapp-postgresql.md, webapp-postgresql-redis.md, worker-redis.md.
+            Each runbook follows UC-018 structure: export → convert → fix →
+            submit → validate steps. Configure TechDocs in app-config.yaml
+            to serve docs/ via @backstage/plugin-techdocs.
+          artifact: >
+            docs/runbooks/webapp-postgresql.md +
+            docs/runbooks/webapp-postgresql-redis.md +
+            docs/runbooks/worker-redis.md +
+            platform/backstage/app-config.techdocs.yaml
+          depends_on: [task-4.1]
+          validation: >
+            Navigate to http://localhost:7007/docs — runbook pages render
+            in TechDocs. Each runbook contains all 5 steps from UC-018
+            Main Success Scenario. Navigate to a non-existent application
+            type → "Runbook missing — contact platform engineer" notice
+            appears (AC-068).
+
+      checkpoint:
+        description: >
+          Human review: verify the complete developer self-service flow
+          before writing the acceptance test suite.
+        criteria:
+          - "Developer (no K8s knowledge) creates a working environment via Backstage in <5 min (vision success criteria)"
+          - "OIDC login works; developer sees only their team's environments (AC-025)"
+          - "New Environment template commits valid YAML to Git and ArgoCD picks it up (AC-020)"
+          - "Migration dashboard shows correct team aggregates from live tracker data (AC-065)"
+          - "TechDocs runbooks are accessible and cover all identified application types (NFR-012)"
+
+    # ─────────────────────────────────────────────────────────────────
+    - id: phase-5
+      name: "Acceptance Testing & Hardening"
+      description: >
+        Implement the full acceptance test suite covering all mandatory ACs,
+        run security scans, and execute the load test. This phase validates
+        the entire platform end-to-end on a dedicated test cluster.
+
+      tasks:
+
+        - id: task-5.1
+          name: "Acceptance tests: environment lifecycle"
+          description: >
+            Write tests/acceptance/lifecycle_test.go covering:
+            AC-001 (commit valid manifest → Synced ≤5 min),
+            AC-003 (invalid schema → Degraded + zero resources),
+            AC-005 (disable component → all resources gone ≤3 min),
+            AC-006 (delete manifest → namespace deleted ≤5 min),
+            AC-007 (idempotent re-apply → zero cluster changes),
+            AC-008 (manifest preserved after disable).
+            Each test uses a unique environment name to avoid conflicts.
+            Measure actual elapsed time and assert against SLA thresholds.
+          artifact: "tests/acceptance/lifecycle_test.go"
+          depends_on: [task-2.5, task-2.6]
+          validation: >
+            `go test ./tests/acceptance/... -run TestLifecycle -v`
+            all pass on the dedicated test cluster. AC-001 timing
+            assertion logs actual elapsed seconds.
+
+        - id: task-5.2
+          name: "Acceptance tests: component overrides and database"
+          description: >
+            Write tests/acceptance/components_test.go covering:
+            AC-004 (enable component → resources ready ≤5 min),
+            AC-009 (replicas=3 → 3 pods),
+            AC-010 (imageTag override → deployment uses tag),
+            AC-011 (replicas=51 → rejected with range error),
+            AC-013 (replicas=0 → deployment exists, 0 pods),
+            AC-015 (DB provisioned → DatabaseInstance Ready + Secret exists),
+            AC-016 (DB deleted with disabled component ≤3 min),
+            AC-018 (DB credentials never in ConfigMap or env literals).
+          artifact: "tests/acceptance/components_test.go"
+          depends_on: [task-5.1]
+          validation: >
+            `go test ./tests/acceptance/... -run TestComponents -v` all pass.
+            AC-018: grep all ConfigMaps and Deployment env[].value fields
+            in test namespace for any value matching a password pattern
+            → zero matches.
+
+        - id: task-5.3
+          name: "Acceptance tests: GitOps self-heal and isolation"
+          description: >
+            Write tests/acceptance/gitops_test.go covering:
+            AC-019 (cross-namespace connection refused — TCP timeout),
+            AC-037 (manual resource delete → ArgoCD restores ≤3 min),
+            AC-038 (manual kubectl scale → ArgoCD reverts ≤3 min),
+            AC-040 (kubectl apply → ArgoCD reverts ≤3 min),
+            AC-041 (pod-to-pod cross-namespace TCP refused),
+            AC-042 (intra-namespace pod communication allowed).
+            AC-039: verify Git commit history contains author + diff for
+            each programmatic change made during tests.
+          artifact: "tests/acceptance/gitops_test.go"
+          depends_on: [task-5.1, task-5.2]
+          validation: >
+            `go test ./tests/acceptance/... -run TestGitOps -v` all pass.
+            AC-019: test records TCP dial error type = "connection refused"
+            or timeout, not "connection reset" (which would indicate
+            wrong policy type).
+
+        - id: task-5.4
+          name: "Acceptance tests: migration CLI"
+          description: >
+            Write tests/acceptance/migration_test.go covering:
+            AC-052 (10-service fixture → ≥9 correctly mapped),
+            AC-053 (source file unchanged after conversion),
+            AC-055 (unknown service → enabled:false + TODO comment),
+            AC-059 (PASSWORD/SECRET/KEY/TOKEN vars → <REDACTED>),
+            AC-073–075 (register-legacy happy path + error cases),
+            AC-076–077 (complete-migration lifecycle),
+            AC-078–080 (deprecate-legacy gate + report generation).
+          artifact: "tests/acceptance/migration_test.go"
+          depends_on: [task-3.6, task-5.1]
+          validation: >
+            `go test ./tests/acceptance/... -run TestMigration -v` all pass.
+            AC-078: assert deprecation-report-<date>.md file exists after
+            --confirm and contains all environment IDs with completed_at
+            timestamps.
+
+        - id: task-5.5
+          name: "Security scan and credential audit"
+          description: >
+            Run kubescape scan against all manifests in platform/ and
+            environments/. Add security-scan job to CI pipeline that fails
+            on any CRITICAL severity finding. Write tests/security/credential_scan_test.go
+            that greps all YAML files in environments/ for literal patterns:
+            password:, secret:, token:, privateKey: as values (not references).
+            Write tests/security/netpol_test.go to assert all environment
+            namespaces have the three baseline NetworkPolicies applied.
+          artifact: >
+            .github/workflows/ci.yaml (security-scan job added) +
+            tests/security/credential_scan_test.go +
+            tests/security/netpol_test.go
+          depends_on: [task-5.3]
+          validation: >
+            `kubescape scan platform/` exits 0 with zero CRITICAL findings.
+            `go test ./tests/security/... -v` passes. Manually add a
+            `password: hardcoded123` to a test file → credential_scan
+            test fails with that file path in the error message.
+
+        - id: task-5.6
+          name: "Load test: 50 concurrent environments"
+          description: >
+            Write .github/workflows/load-test.yaml (manual trigger) and
+            tests/load/concurrency_test.go. Test: create 50 environment
+            manifests via 50 sequential Git commits within a 5-min window
+            using a test helper. Measure per-environment sync time from
+            commit timestamp to ArgoCD Synced status. Assert: median ≤5 min,
+            no individual environment >8 min (AC-072). Cluster requirements:
+            3 nodes × 4 vCPU × 8 GB RAM (documented in test header comment).
+          artifact: >
+            tests/load/concurrency_test.go +
+            .github/workflows/load-test.yaml (complete)
+          depends_on: [task-5.5]
+          validation: >
+            Run manually on a 3-node cluster. Test output prints per-environment
+            timing table. Median and max timing assertions pass. Test cleans
+            up all 50 environments after completion (namespace deletion).
+
+      checkpoint:
+        description: >
+          Final human review before platform is declared production-ready.
+        criteria:
+          - "All lifecycle, component, GitOps, and migration acceptance tests pass (AC-001–080)"
+          - "kubescape scan reports zero CRITICAL severity findings"
+          - "No committed YAML file contains literal credentials"
+          - "Load test passes on a 3-node cluster: median sync ≤5 min (AC-072)"
+          - "A developer with no Kubernetes knowledge creates a working environment in <5 min (vision success criteria)"
+          - "All 22 use cases (UC-001–UC-022) have been exercised by at least one test"
