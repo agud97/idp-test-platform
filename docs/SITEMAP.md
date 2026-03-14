@@ -39,6 +39,10 @@
   - какие нормативные docs были переписаны после реального исполнения
   - зачем это понадобилось
 
+- [NEXT_AGENT_RISKS_AND_RESOLVED_BLOCKERS.md](NEXT_AGENT_RISKS_AND_RESOLVED_BLOCKERS.md)
+  - что уже не должно блокировать следующего агента
+  - какие внешние runtime-риски всё ещё останутся
+
 ## Architecture / Design Documents
 
 - [ARCHITECTURE_OVERVIEW.md](ARCHITECTURE_OVERVIEW.md)
@@ -147,7 +151,8 @@
 1. [docs/status.md](status.md)
 2. [plan.yaml](plan.yaml)
 3. [POST_IMPLEMENTATION_DOC_CHANGES.md](POST_IMPLEMENTATION_DOC_CHANGES.md)
-4. [RELEASE_SUMMARY.md](../RELEASE_SUMMARY.md)
+4. [NEXT_AGENT_RISKS_AND_RESOLVED_BLOCKERS.md](NEXT_AGENT_RISKS_AND_RESOLVED_BLOCKERS.md)
+5. [RELEASE_SUMMARY.md](../RELEASE_SUMMARY.md)
 
 ## Short Navigation Cheat Sheet
 

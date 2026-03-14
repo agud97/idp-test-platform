@@ -7,6 +7,7 @@
 - [OPERATIONS_CHECKLIST.md](OPERATIONS_CHECKLIST.md)
 - [docs/status.md](docs/status.md)
 - [docs/POST_IMPLEMENTATION_DOC_CHANGES.md](docs/POST_IMPLEMENTATION_DOC_CHANGES.md)
+- [docs/NEXT_AGENT_RISKS_AND_RESOLVED_BLOCKERS.md](docs/NEXT_AGENT_RISKS_AND_RESOLVED_BLOCKERS.md)
 - [TESTING_GUIDE.md](docs/TESTING_GUIDE.md)
 - [USER_JOURNEYS.md](docs/USER_JOURNEYS.md)
 
@@ -112,6 +113,9 @@
 Если нужно понять, какие исходные spec/plan формулировки были переписаны после реального исполнения:
 - читай [docs/POST_IMPLEMENTATION_DOC_CHANGES.md](docs/POST_IMPLEMENTATION_DOC_CHANGES.md)
 
+Если нужно понять, что следующий агент уже не должен расследовать заново, а что всё ещё остаётся внешним риском среды:
+- читай [docs/NEXT_AGENT_RISKS_AND_RESOLVED_BLOCKERS.md](docs/NEXT_AGENT_RISKS_AND_RESOLVED_BLOCKERS.md)
+
 ## Рекомендуемый порядок чтения
 
 ### Для руководителя / reviewer
@@ -152,6 +156,8 @@
   - формальная история исполнения плана
 - [docs/POST_IMPLEMENTATION_DOC_CHANGES.md](docs/POST_IMPLEMENTATION_DOC_CHANGES.md)
   - что и почему было переписано в нормативных docs после исполнения
+- [docs/NEXT_AGENT_RISKS_AND_RESOLVED_BLOCKERS.md](docs/NEXT_AGENT_RISKS_AND_RESOLVED_BLOCKERS.md)
+  - какие blockers уже сняты, а какие риски останутся на новом кластере
 
 ## Если нужно начать с одного файла
 
