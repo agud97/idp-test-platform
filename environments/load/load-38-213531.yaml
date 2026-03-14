@@ -1,0 +1,12 @@
+apiVersion: idp.platform.io/v1alpha1
+kind: Environment
+metadata:
+  name: load-38-213531
+spec:
+  owner: group:default/platform
+  team: load
+  components:
+    - name: web
+      type: webapp
+      enabled: true
+      replicas: 1
