@@ -1,5 +1,9 @@
 backstage:
   appConfig:
+    integrations:
+      github:
+        - host: github.com
+          token: ${GITHUB_TOKEN}
     backend:
       reading:
         allow:
