@@ -18,3 +18,5 @@ if (source.includes(addition)) {
 }
 fs.writeFileSync(path, source.replace(needle, `${needle}\n${addition}`));
 NODE
+
+WORKDIR /app
