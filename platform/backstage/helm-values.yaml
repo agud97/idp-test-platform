@@ -18,7 +18,4 @@ backstage:
     - |
       mkdir -p /tmp/catalog
       printf '%s\n' "$ALL_COMPONENTS_YAML" > /tmp/catalog/all-components.yaml
-      exec node packages/backend \
-        --config app-config.yaml \
-        --config app-config.production.yaml \
-        --config /app/app-config-from-configmap.yaml
+      exec node packages/backend --config /app/app-config-from-configmap.yaml
