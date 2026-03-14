@@ -77,6 +77,14 @@
   - запуск test environments
   - добавление новых сервисов и component types
 
+- [ADDING_NEW_PLATFORM_COMPONENT_TYPE.md](ADDING_NEW_PLATFORM_COMPONENT_TYPE.md)
+  - отдельный подробный guide по platform-engineering сценарию
+  - как добавить новый supported component type end to end
+
+- [NEW_COMPONENT_TYPE_PR_TEMPLATE.md](NEW_COMPONENT_TYPE_PR_TEMPLATE.md)
+  - шаблон PR для добавления нового component type
+  - помогает не забыть provisioning, tests и docs
+
 - [USER_JOURNEYS.md](USER_JOURNEYS.md)
   - типовые end-to-end пользовательские сценарии
   - полезен для onboarding, demos и handoff

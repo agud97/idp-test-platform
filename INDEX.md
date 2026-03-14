@@ -8,6 +8,8 @@
 - [docs/status.md](docs/status.md)
 - [docs/POST_IMPLEMENTATION_DOC_CHANGES.md](docs/POST_IMPLEMENTATION_DOC_CHANGES.md)
 - [docs/NEXT_AGENT_RISKS_AND_RESOLVED_BLOCKERS.md](docs/NEXT_AGENT_RISKS_AND_RESOLVED_BLOCKERS.md)
+- [docs/ADDING_NEW_PLATFORM_COMPONENT_TYPE.md](docs/ADDING_NEW_PLATFORM_COMPONENT_TYPE.md)
+- [docs/NEW_COMPONENT_TYPE_PR_TEMPLATE.md](docs/NEW_COMPONENT_TYPE_PR_TEMPLATE.md)
 - [TESTING_GUIDE.md](docs/TESTING_GUIDE.md)
 - [USER_JOURNEYS.md](docs/USER_JOURNEYS.md)
 
@@ -86,6 +88,13 @@
 - environment lifecycle workflow
 - добавление новых сервисов и component types
 
+Если нужен именно отдельный deep-dive по platform engineering сценарию
+добавления нового type:
+- читай [ADDING_NEW_PLATFORM_COMPONENT_TYPE.md](docs/ADDING_NEW_PLATFORM_COMPONENT_TYPE.md)
+
+Если нужен готовый шаблон PR под такой change:
+- читай [NEW_COMPONENT_TYPE_PR_TEMPLATE.md](docs/NEW_COMPONENT_TYPE_PR_TEMPLATE.md)
+
 ### Нужны типовые сценарии от лица пользователя
 
 Читай [USER_JOURNEYS.md](docs/USER_JOURNEYS.md).
@@ -150,6 +159,10 @@
   - команды, проверки и operational troubleshooting
 - [TESTING_GUIDE.md](docs/TESTING_GUIDE.md)
   - подробный guide по тестированию и практическому использованию
+- [docs/ADDING_NEW_PLATFORM_COMPONENT_TYPE.md](docs/ADDING_NEW_PLATFORM_COMPONENT_TYPE.md)
+  - отдельный пошаговый guide по добавлению нового platform component type
+- [docs/NEW_COMPONENT_TYPE_PR_TEMPLATE.md](docs/NEW_COMPONENT_TYPE_PR_TEMPLATE.md)
+  - готовый PR template для изменений такого типа
 - [USER_JOURNEYS.md](docs/USER_JOURNEYS.md)
   - типовые end-to-end пользовательские сценарии
 - [docs/status.md](docs/status.md)
