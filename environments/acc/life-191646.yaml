@@ -1,0 +1,14 @@
+# create
+apiVersion: idp.platform.io/v1alpha1
+kind: Environment
+metadata:
+  name: life-191646
+spec:
+  owner: group:default/platform
+  team: acc
+  components:
+    - name: web
+      type: webapp
+      enabled: true
+      imageRepository: docker.io/library/nginx
+      imageTag: 1.27.4
