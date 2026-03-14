@@ -2,10 +2,12 @@ backstage:
   image:
     registry: ghcr.io
     repository: agud97/idp-test-platform/backstage-oidc
-    tag: phase-4-task-4-3-r4
+    tag: phase-4-task-4-4-r1
     pullSecrets:
       - ghcr-pull
   extraEnvVars:
+    - name: IDP_TRACKER_DB
+      value: /tmp/idp/tracker.db
     - name: K8S_SERVICE_ACCOUNT_TOKEN
       valueFrom:
         secretKeyRef:

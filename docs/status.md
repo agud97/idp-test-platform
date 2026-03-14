@@ -2,8 +2,8 @@
 
 ## Current Position
 - Phase: phase-4
-- Task: task-4.3
-- Status: IN_PROGRESS
+- Task: task-4.4
+- Status: BLOCKED
 
 ## Progress
 
@@ -41,8 +41,8 @@
 |----------|---------------|-------|
 | task-4.1 | COMPLETE | Added Backstage OIDC config plus `auth.session.secret`, pushed a custom Backstage image with the OIDC provider module, created the Authentik provider/application and `backstage-secrets`, verified `GET /api/auth/oidc/start` returns a `302` redirect to Authentik, and validated test-user claims: `dev-alice` => `role=developer, team_id=alpha`, `platform-bob` => `role=platform_engineer, team_id=null`. |
 | task-4.2 | COMPLETE | Added static GitHub-backed catalog locations with `integrations.github` token wiring, pinned the initial catalog target to commit `1a7c2a4` to avoid branch-name slash parsing, corrected Kubernetes `caData` to the base64-encoded cluster CA, validated RBAC dry-run, confirmed authenticated catalog API returns 4 entities including `component:default/backstage-portal`, and confirmed authenticated Kubernetes workload queries return live pod/service/deployment data for that component. |
-| task-4.3 | IN_PROGRESS | Reworking the template execution path after the first live run failed on literal output paths and non-fast-forward Git pushes; checking whether the installed scaffolder action set already supports safe updates to the existing GitOps branch before adding a custom extension. |
-| task-4.4 | NOT_STARTED | |
+| task-4.3 | COMPLETE | Added the `new-environment` scaffolder template plus skeleton files, packaged the catalog and templates into the Backstage image, registered the template from a local file-backed catalog, added a custom `github:repo:upsert` scaffolder action for updating the existing GitOps branch, validated a full live task run (`e9507faa-e4a7-48b1-a0b3-a3cf80e209e3`) that committed branch head `0c95e8ead5c0ebda2b8bf34dc509109133e32915`, generated `environments/platform/smoke-template-0314h.yaml` and `catalog/environments/platform-smoke-template-0314h.yaml`, and registered `component:default/platform-smoke-template-0314h` in the catalog. |
+| task-4.4 | BLOCKED | The plan requires `packages/backend/src/plugins/migrationDashboard.ts`, but this repo has no Backstage source workspace under `packages/`; the live portal runs from a prebuilt image patched through `platform/backstage/Dockerfile`, so the plugin cannot be compiled, imported, or validated without modifying files outside task-4.4 scope. |
 | task-4.5 | NOT_STARTED | |
 | task-4.6 | NOT_STARTED | |
 
@@ -66,7 +66,8 @@
 | phase-5 | NOT_REACHED | |
 
 ## Blockers
-<!-- empty if none -->
+- task-4.4: The repository does not contain `packages/backend/` or any Backstage backend source tree. Implementing only `packages/backend/src/plugins/migrationDashboard.ts` cannot affect the running portal, because the deployed backend is a prebuilt image patched directly in `platform/backstage/Dockerfile`. Validating `GET /api/migration/status` would require additional changes outside the task artifact, such as wiring the plugin into the runtime image/build path.
 
 ## Deviations
 - task-4.3: User approved extending scope to edit `catalog/all-components.yaml` so the new scaffolder template can be registered in the static Backstage catalog.
+- task-4.3: User approved implementing a custom scaffolder backend action because the stock `github:repo:push` action could not safely update the existing populated GitOps branch.
