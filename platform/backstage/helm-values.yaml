@@ -3,6 +3,8 @@ backstage:
     registry: ghcr.io
     repository: agud97/idp-test-platform/backstage-oidc
     tag: phase-4-task-4-1
+    pullSecrets:
+      - ghcr-pull
   appConfig:
     app:
       title: IDP Platform
