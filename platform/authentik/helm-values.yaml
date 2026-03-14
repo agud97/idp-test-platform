@@ -13,7 +13,7 @@ redis:
   enabled: true
   image:
     registry: docker.io
-    repository: bitnami/redis
+    repository: bitnamilegacy/redis
     tag: 7.4.1-debian-12-r3
   master:
     persistence:
