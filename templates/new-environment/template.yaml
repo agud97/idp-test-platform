@@ -68,7 +68,7 @@ spec:
       name: Render environment manifest
       action: fetch:template:file
       input:
-        url: ./skeleton/environments/${{ values.team }}/${{ values.env_name }}.yaml
+        url: ./skeleton/environment.yaml
         targetPath: ./environments/${{ parameters.team }}/${{ parameters.environment_name }}.yaml
         values:
           env_name: ${{ parameters.environment_name }}
@@ -85,7 +85,7 @@ spec:
       name: Render catalog entry
       action: fetch:template:file
       input:
-        url: ./skeleton/catalog/environments/${{ values.team }}-${{ values.env_name }}.yaml
+        url: ./skeleton/catalog-info.yaml
         targetPath: ./catalog/environments/${{ parameters.team }}-${{ parameters.environment_name }}.yaml
         values:
           env_name: ${{ parameters.environment_name }}
