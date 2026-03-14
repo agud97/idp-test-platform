@@ -89,6 +89,10 @@
   - подробный guide для случая, когда нужно добавить много новых приложений
   - все они используют уже существующий type `webapp`
 
+- [BACKSTAGE_OPERATIONS_GUIDE.md](BACKSTAGE_OPERATIONS_GUIDE.md)
+  - подробный guide по операциям, которые имеет смысл делать через Backstage
+  - что делать через Backstage, а что через Git и `kubectl`
+
 - [USER_JOURNEYS.md](USER_JOURNEYS.md)
   - типовые end-to-end пользовательские сценарии
   - полезен для onboarding, demos и handoff

@@ -11,6 +11,7 @@
 - [docs/ADDING_NEW_PLATFORM_COMPONENT_TYPE.md](docs/ADDING_NEW_PLATFORM_COMPONENT_TYPE.md)
 - [docs/NEW_COMPONENT_TYPE_PR_TEMPLATE.md](docs/NEW_COMPONENT_TYPE_PR_TEMPLATE.md)
 - [docs/ADDING_MULTIPLE_WEBAPPS.md](docs/ADDING_MULTIPLE_WEBAPPS.md)
+- [docs/BACKSTAGE_OPERATIONS_GUIDE.md](docs/BACKSTAGE_OPERATIONS_GUIDE.md)
 - [TESTING_GUIDE.md](docs/TESTING_GUIDE.md)
 - [USER_JOURNEYS.md](docs/USER_JOURNEYS.md)
 
@@ -100,6 +101,10 @@
 `type: webapp`:
 - читай [ADDING_MULTIPLE_WEBAPPS.md](docs/ADDING_MULTIPLE_WEBAPPS.md)
 
+Если нужен отдельный практический guide по тому, что именно можно делать через
+Backstage и как это использовать вместе с GitOps:
+- читай [BACKSTAGE_OPERATIONS_GUIDE.md](docs/BACKSTAGE_OPERATIONS_GUIDE.md)
+
 ### Нужны типовые сценарии от лица пользователя
 
 Читай [USER_JOURNEYS.md](docs/USER_JOURNEYS.md).
@@ -170,6 +175,8 @@
   - готовый PR template для изменений такого типа
 - [docs/ADDING_MULTIPLE_WEBAPPS.md](docs/ADDING_MULTIPLE_WEBAPPS.md)
   - отдельный практический guide по массовому добавлению webapp-компонентов
+- [docs/BACKSTAGE_OPERATIONS_GUIDE.md](docs/BACKSTAGE_OPERATIONS_GUIDE.md)
+  - отдельный guide по Backstage-операциям и их месту в общем workflow
 - [USER_JOURNEYS.md](docs/USER_JOURNEYS.md)
   - типовые end-to-end пользовательские сценарии
 - [docs/status.md](docs/status.md)
