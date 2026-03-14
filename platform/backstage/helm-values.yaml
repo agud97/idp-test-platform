@@ -62,6 +62,6 @@ backstage:
     - -ec
   args:
     - |
-      mkdir -p /tmp/catalog
-      printf '%s\n' "$ALL_COMPONENTS_YAML" > /tmp/catalog/all-components.yaml
+      mkdir -p /app/catalog
+      printf '%s\n' "$ALL_COMPONENTS_YAML" > /app/catalog/all-components.yaml
       exec node packages/backend --config /app/app-config-from-configmap.yaml

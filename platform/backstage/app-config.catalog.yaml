@@ -3,7 +3,7 @@ backstage:
     catalog:
       locations:
         - type: file
-          target: /tmp/catalog/all-components.yaml
+          target: ./catalog/all-components.yaml
           rules:
             - allow:
                 - Component
