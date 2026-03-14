@@ -1,4 +1,4 @@
-# idempotent-reapply
+# disable
 apiVersion: idp.platform.io/v1alpha1
 kind: Environment
 metadata:
@@ -9,6 +9,6 @@ spec:
   components:
     - name: web
       type: webapp
-      enabled: true
+      enabled: false
       imageRepository: docker.io/library/nginx
       imageTag: 1.27.4
