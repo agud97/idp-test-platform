@@ -64,11 +64,12 @@ spec:
           maximum: 50
           default: 1
   steps:
-    - id: fetch-template
-      name: Render environment files
-      action: fetch:template
+    - id: render-environment
+      name: Render environment manifest
+      action: fetch:template:file
       input:
-        url: ./skeleton
+        url: ./skeleton/environments/${{ values.team }}/${{ values.env_name }}.yaml
+        targetPath: ./environments/${{ parameters.team }}/${{ parameters.environment_name }}.yaml
         values:
           env_name: ${{ parameters.environment_name }}
           environment_name: ${{ parameters.environment_name }}
@@ -80,12 +81,24 @@ spec:
           postgresql_enabled: ${{ parameters.postgresql_enabled }}
           redis_enabled: ${{ parameters.redis_enabled }}
           redis_replicas: ${{ parameters.redis_replicas }}
+    - id: render-catalog
+      name: Render catalog entry
+      action: fetch:template:file
+      input:
+        url: ./skeleton/catalog/environments/${{ values.team }}-${{ values.env_name }}.yaml
+        targetPath: ./catalog/environments/${{ parameters.team }}-${{ parameters.environment_name }}.yaml
+        values:
+          env_name: ${{ parameters.environment_name }}
+          environment_name: ${{ parameters.environment_name }}
+          team: ${{ parameters.team }}
+          owner: ${{ parameters.owner }}
     - id: publish
       name: Commit files to the GitOps repository
-      action: github:repo:push
+      action: github:repo:upsert
       input:
         repoUrl: github.com?owner=agud97&repo=idp-test-platform
-        defaultBranch: feature/phase-1-foundation
+        branch: feature/phase-1-foundation
+        sourcePath: .
         gitCommitMessage: Create environment ${{ parameters.team }}/${{ parameters.environment_name }}
         gitAuthorName: Backstage Scaffolder
         gitAuthorEmail: backstage@idp.platform.io

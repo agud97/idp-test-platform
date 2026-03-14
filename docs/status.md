@@ -2,7 +2,7 @@
 
 ## Current Position
 - Phase: phase-4
-- Task: task-4.2
+- Task: task-4.3
 - Status: IN_PROGRESS
 
 ## Progress
@@ -40,8 +40,8 @@
 | Task     | Status        | Notes |
 |----------|---------------|-------|
 | task-4.1 | COMPLETE | Added Backstage OIDC config plus `auth.session.secret`, pushed a custom Backstage image with the OIDC provider module, created the Authentik provider/application and `backstage-secrets`, verified `GET /api/auth/oidc/start` returns a `302` redirect to Authentik, and validated test-user claims: `dev-alice` => `role=developer, team_id=alpha`, `platform-bob` => `role=platform_engineer, team_id=null`. |
-| task-4.2 | IN_PROGRESS | Retrying catalog bootstrap against the private GitHub repo using static `catalog.locations` plus explicit `integrations.github` token wiring, after confirming the mounted config and local file are present in the running Backstage pod but the catalog backend still serves zero entities. |
-| task-4.3 | NOT_STARTED | |
+| task-4.2 | COMPLETE | Added static GitHub-backed catalog locations with `integrations.github` token wiring, pinned the initial catalog target to commit `1a7c2a4` to avoid branch-name slash parsing, corrected Kubernetes `caData` to the base64-encoded cluster CA, validated RBAC dry-run, confirmed authenticated catalog API returns 4 entities including `component:default/backstage-portal`, and confirmed authenticated Kubernetes workload queries return live pod/service/deployment data for that component. |
+| task-4.3 | IN_PROGRESS | Reworking the template execution path after the first live run failed on literal output paths and non-fast-forward Git pushes; checking whether the installed scaffolder action set already supports safe updates to the existing GitOps branch before adding a custom extension. |
 | task-4.4 | NOT_STARTED | |
 | task-4.5 | NOT_STARTED | |
 | task-4.6 | NOT_STARTED | |
@@ -69,4 +69,4 @@
 <!-- empty if none -->
 
 ## Deviations
-<!-- record any approved deviations from plan -->
+- task-4.3: User approved extending scope to edit `catalog/all-components.yaml` so the new scaffolder template can be registered in the static Backstage catalog.
