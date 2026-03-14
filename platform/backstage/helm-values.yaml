@@ -11,3 +11,14 @@ backstage:
       baseUrl: http://localhost:7007
     backend:
       baseUrl: http://localhost:7007
+  command:
+    - /bin/sh
+    - -ec
+  args:
+    - |
+      mkdir -p /tmp/catalog
+      printf '%s\n' "$ALL_COMPONENTS_YAML" > /tmp/catalog/all-components.yaml
+      exec node packages/backend \
+        --config app-config.yaml \
+        --config app-config.production.yaml \
+        --config /app/app-config-from-configmap.yaml

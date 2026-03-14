@@ -3,7 +3,7 @@
 ## Current Position
 - Phase: phase-4
 - Task: task-4.2
-- Status: BLOCKED
+- Status: IN_PROGRESS
 
 ## Progress
 
@@ -40,7 +40,7 @@
 | Task     | Status        | Notes |
 |----------|---------------|-------|
 | task-4.1 | COMPLETE | Added Backstage OIDC config plus `auth.session.secret`, pushed a custom Backstage image with the OIDC provider module, created the Authentik provider/application and `backstage-secrets`, verified `GET /api/auth/oidc/start` returns a `302` redirect to Authentik, and validated test-user claims: `dev-alice` => `role=developer, team_id=alpha`, `platform-bob` => `role=platform_engineer, team_id=null`. |
-| task-4.2 | BLOCKED | Added catalog and kubernetes app-config overlays, catalog/all-components.yaml, and limited-reader RBAC; `kubectl apply --dry-run=client -f platform/backstage/rbac/` passes and the Kubernetes backend now initializes successfully, but Backstage still does not ingest the static catalog location into entities after multiple config variants and reloads. |
+| task-4.2 | IN_PROGRESS | Investigating a task-scoped local catalog bootstrap after remote `catalog.locations` variants with GitHub integration URL, raw exact-file URL, host allowlist, location-scoped rules, and injected `GITHUB_TOKEN` still yielded zero imported entities; Kubernetes backend and RBAC remain healthy. |
 | task-4.3 | NOT_STARTED | |
 | task-4.4 | NOT_STARTED | |
 | task-4.5 | NOT_STARTED | |
@@ -66,7 +66,7 @@
 | phase-5 | NOT_REACHED | |
 
 ## Blockers
-- task-4.2: Backstage accepts the catalog/kubernetes configuration and initializes the Kubernetes backend, but static `catalog.locations` still yields zero imported entities after retries with GitHub blob URL, raw URL plus `backend.reading.allow`, and location-scoped `rules`, so the catalog/Kubernetes-tab validation cannot be completed.
+<!-- empty if none -->
 
 ## Deviations
 <!-- record any approved deviations from plan -->

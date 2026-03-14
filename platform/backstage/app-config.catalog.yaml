@@ -1,17 +1,45 @@
 backstage:
+  extraEnvVars:
+    - name: ALL_COMPONENTS_YAML
+      value: |
+        apiVersion: backstage.io/v1alpha1
+        kind: Component
+        metadata:
+          name: backstage-portal
+          description: IDP Backstage portal deployed in the shared platform namespace.
+          annotations:
+            backstage.io/kubernetes-cluster: primary
+            backstage.io/kubernetes-namespace: backstage
+            backstage.io/kubernetes-label-selector: app.kubernetes.io/instance=backstage
+        spec:
+          type: service
+          lifecycle: production
+          owner: platform
+          system: idp-platform
+        ---
+        apiVersion: backstage.io/v1alpha1
+        kind: System
+        metadata:
+          name: idp-platform
+          description: Shared control-plane services for the IDP test environment platform.
+        spec:
+          owner: platform
+        ---
+        apiVersion: backstage.io/v1alpha1
+        kind: Group
+        metadata:
+          name: platform
+          description: Platform engineering team.
+        spec:
+          type: team
+          profile:
+            displayName: Platform Engineering
+          children: []
   appConfig:
-    integrations:
-      github:
-        - host: github.com
-          token: ${GITHUB_TOKEN}
-    backend:
-      reading:
-        allow:
-          - host: raw.githubusercontent.com
     catalog:
       locations:
-        - type: url
-          target: https://raw.githubusercontent.com/agud97/idp-test-platform/feature/phase-1-foundation/catalog/all-components.yaml
+        - type: file
+          target: /tmp/catalog/all-components.yaml
           rules:
             - allow:
                 - Component
