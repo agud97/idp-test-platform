@@ -31,3 +31,12 @@ spec:
   profile:
     displayName: Platform Engineering
   children: []
+---
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: new-environment-template
+  description: Registers the self-service Backstage template for new IDP environments.
+spec:
+  type: url
+  target: https://github.com/agud97/idp-test-platform/blob/89e4e3a5ace111ca9fbb9714fdd9d12d40df3f28/templates/new-environment/template.yaml
