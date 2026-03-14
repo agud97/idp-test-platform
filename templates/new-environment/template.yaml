@@ -1,0 +1,102 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: new-environment
+  title: New Environment
+  description: Create a new IDP test environment and register it in the Backstage catalog.
+  tags:
+    - environment
+    - gitops
+    - idp
+spec:
+  owner: group:default/platform
+  type: service
+  parameters:
+    - title: Environment Details
+      required:
+        - environment_name
+        - team
+        - owner
+      properties:
+        environment_name:
+          title: Environment Name
+          type: string
+          description: Lowercase slug used for the GitOps manifest and namespace suffix.
+          pattern: '^[a-z0-9-]{1,40}$'
+        team:
+          title: Team
+          type: string
+          description: Team slug used for the manifest path under environments/<team>/.
+          pattern: '^[a-z0-9-]{1,20}$'
+        owner:
+          title: Owner Entity Ref
+          type: string
+          description: Backstage entity ref such as user:default/dev-alice or group:default/platform.
+          default: group:default/platform
+    - title: Component Selection
+      properties:
+        webapp_enabled:
+          title: Enable Webapp
+          type: boolean
+          default: true
+        webapp_image_tag:
+          title: Webapp Image Tag
+          type: string
+          default: latest
+        webapp_replicas:
+          title: Webapp Replicas
+          type: integer
+          minimum: 0
+          maximum: 50
+          default: 1
+        postgresql_enabled:
+          title: Enable PostgreSQL
+          type: boolean
+          default: true
+        redis_enabled:
+          title: Enable Redis
+          type: boolean
+          default: false
+        redis_replicas:
+          title: Redis Replicas
+          type: integer
+          minimum: 0
+          maximum: 50
+          default: 1
+  steps:
+    - id: fetch-template
+      name: Render environment files
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          env_name: ${{ parameters.environment_name }}
+          environment_name: ${{ parameters.environment_name }}
+          team: ${{ parameters.team }}
+          owner: ${{ parameters.owner }}
+          webapp_enabled: ${{ parameters.webapp_enabled }}
+          webapp_image_tag: ${{ parameters.webapp_image_tag }}
+          webapp_replicas: ${{ parameters.webapp_replicas }}
+          postgresql_enabled: ${{ parameters.postgresql_enabled }}
+          redis_enabled: ${{ parameters.redis_enabled }}
+          redis_replicas: ${{ parameters.redis_replicas }}
+    - id: publish
+      name: Commit files to the GitOps repository
+      action: github:repo:push
+      input:
+        repoUrl: github.com?owner=agud97&repo=idp-test-platform
+        defaultBranch: feature/phase-1-foundation
+        gitCommitMessage: Create environment ${{ parameters.team }}/${{ parameters.environment_name }}
+        gitAuthorName: Backstage Scaffolder
+        gitAuthorEmail: backstage@idp.platform.io
+    - id: register
+      name: Register catalog entry
+      action: catalog:register
+      input:
+        catalogInfoUrl: https://github.com/agud97/idp-test-platform/blob/${{ steps.publish.output.commitHash }}/catalog/environments/${{ parameters.team }}-${{ parameters.environment_name }}.yaml
+  output:
+    links:
+      - title: Git commit
+        url: https://github.com/agud97/idp-test-platform/commit/${{ steps.publish.output.commitHash }}
+      - title: Catalog entity
+        entityRef: ${{ steps.register.output.entityRef }}
