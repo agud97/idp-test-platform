@@ -7,7 +7,7 @@ backstage:
     catalog:
       locations:
         - type: url
-          target: https://github.com/agud97/idp-test-platform/blob/2bc6bcb68b65172536ae369297ad1b27881d7112/catalog/all-components.yaml
+          target: https://raw.githubusercontent.com/agud97/idp-test-platform/a85860575eddb4bc59e8d4087bd8d7b1aaef2a08/catalog/all-components.yaml
           rules:
             - allow:
                 - Component
