@@ -2,8 +2,8 @@
 
 ## Current Position
 - Phase: phase-2.7
-- Task: task-2.7.4
-- Status: IN_PROGRESS
+- Task: task-2.7.5
+- Status: NOT_STARTED
 
 ## Progress
 
@@ -32,7 +32,7 @@
 | task-2.7.1 | COMPLETE | Replaced the plain CRD with a Crossplane XRD + namespaced claim in `platform/crds/environment.yaml`, validated it offline with `crank beta validate`, validated `kubectl apply --dry-run=client`, applied the XRD to the cluster, and confirmed a duplicate-component claim is rejected by CEL with `Component names must be unique within an environment`. |
 | task-2.7.2 | COMPLETE | Added `platform/crossplane/environment/composition.yaml`; validated with `crank beta validate` and rendered a fixture `XEnvironment` to confirm one derived namespace, all three baseline NetworkPolicies, `XWebappInstance`, `XPostgresqlInstance`, and omission of the disabled `redis` component from the desired child composite set. |
 | task-2.7.3 | COMPLETE | Added `platform/crossplane/provider-kubernetes.yaml`, installed `provider-kubernetes` v0.18.0, waited for the provider CRD registration race to settle, re-ran `kubectl apply --dry-run=client -f platform/crossplane/`, and confirmed `provider-kubernetes` is Healthy plus `kubernetes-provider` exists as a cluster `ProviderConfig` using `InjectedIdentity`. |
-| task-2.7.4 | IN_PROGRESS | User approved the scope extension to remediate the legacy component XRD artifacts from tasks 2.1–2.3 before wiring ArgoCD to GitOps-deploy `platform/crossplane/`. |
+| task-2.7.4 | COMPLETE | Removed the invalid `spec.scope` field from the legacy `webapp` / `postgresql` / `redis` XRD artifacts, converted `platform/argocd/app-crossplane.yaml` to a multi-source Application, switched `appset-environments.yaml` to apply Environment claims into `crossplane-system`, pushed revision `d16604694c3025f9ab4cd487a9d646d93e25781d`, and validated live that `kubectl get xrd`, `kubectl get composition`, `kubectl get environmentconfig`, and `kubectl get providerconfig.kubernetes.crossplane.io` all show the repo-hosted Crossplane definitions now present in the cluster. |
 | task-2.7.5 | NOT_STARTED | |
 
 ### Phase 3: CLI Migration Tool
