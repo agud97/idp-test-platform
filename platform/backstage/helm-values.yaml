@@ -5,6 +5,52 @@ backstage:
     tag: phase-4-task-4-1-r2
     pullSecrets:
       - ghcr-pull
+  extraEnvVars:
+    - name: ALL_COMPONENTS_YAML
+      value: |
+        apiVersion: backstage.io/v1alpha1
+        kind: Component
+        metadata:
+          name: backstage-portal
+          description: IDP Backstage portal deployed in the shared platform namespace.
+          annotations:
+            backstage.io/kubernetes-cluster: primary
+            backstage.io/kubernetes-namespace: backstage
+            backstage.io/kubernetes-label-selector: app.kubernetes.io/instance=backstage
+        spec:
+          type: service
+          lifecycle: production
+          owner: platform
+          system: idp-platform
+        ---
+        apiVersion: backstage.io/v1alpha1
+        kind: System
+        metadata:
+          name: idp-platform
+          description: Shared control-plane services for the IDP test environment platform.
+        spec:
+          owner: platform
+        ---
+        apiVersion: backstage.io/v1alpha1
+        kind: Group
+        metadata:
+          name: platform
+          description: Platform engineering team.
+        spec:
+          type: team
+          profile:
+            displayName: Platform Engineering
+          children: []
+    - name: K8S_SERVICE_ACCOUNT_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: backstage-k8s-sa-token
+          key: token
+    - name: K8S_CONFIG_CA_DATA
+      valueFrom:
+        secretKeyRef:
+          name: backstage-k8s-sa-token
+          key: ca.crt
   appConfig:
     app:
       title: IDP Platform

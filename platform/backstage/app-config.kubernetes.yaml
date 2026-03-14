@@ -1,15 +1,4 @@
 backstage:
-  extraEnvVars:
-    - name: K8S_SERVICE_ACCOUNT_TOKEN
-      valueFrom:
-        secretKeyRef:
-          name: backstage-k8s-sa-token
-          key: token
-    - name: K8S_CONFIG_CA_DATA
-      valueFrom:
-        secretKeyRef:
-          name: backstage-k8s-sa-token
-          key: ca.crt
   appConfig:
     kubernetes:
       serviceLocatorMethod:
