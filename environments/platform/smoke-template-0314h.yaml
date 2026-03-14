@@ -1,0 +1,21 @@
+# Source: Backstage Scaffolder
+apiVersion: idp.platform.io/v1alpha1
+kind: Environment
+metadata:
+  name: smoke-template-0314h
+spec:
+  owner: group:default/platform
+  team: platform
+  components:
+    - name: web
+      type: webapp
+      enabled: true
+      imageTag: latest
+      replicas: 1
+    - name: database
+      type: postgresql
+      enabled: true
+    - name: cache
+      type: redis
+      enabled: false
+      replicas: 1

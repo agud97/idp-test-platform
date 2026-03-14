@@ -1,0 +1,17 @@
+# Source: Backstage Scaffolder
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: platform-smoke-template-0314h
+  title: smoke-template-0314h
+  description: IDP test environment for team platform.
+  annotations:
+    backstage.io/kubernetes-cluster: primary
+    backstage.io/kubernetes-namespace: env-platform-smoke-template-0314h
+    idp.platform.io/environment-manifest: environments/platform/smoke-template-0314h.yaml
+    idp.platform.io/team: platform
+spec:
+  type: environment
+  lifecycle: experimental
+  owner: group:default/platform
+  system: idp-platform
