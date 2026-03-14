@@ -36,15 +36,15 @@ and the platform reconciles the live cluster state to match.
 3. **Full resource lifecycle** — create, update, and delete Kubernetes resources automatically
 4. **Database provisioning** — databases (PostgreSQL, Redis, etc.) created alongside the application
 5. **Self-service via Backstage** — developers use a UI portal to create environments from templates
-6. **GitOps reconciliation** — ArgoCD watches the Git repo and keeps the cluster in sync
-7. **Infrastructure abstraction** — Crossplane Compositions hide Kubernetes complexity behind simple APIs
+6. **GitOps reconciliation** — ArgoCD watches the Git repo, applies Environment claims, and keeps the control-plane state in sync
+7. **Infrastructure abstraction** — Crossplane Compositions translate Environment claims into namespaces, policies, and workload/database resources
 
 ## Technology Stack
 
 | Tool       | Role                                                              |
 |------------|-------------------------------------------------------------------|
 | ArgoCD     | GitOps controller — reconciles cluster state from Git            |
-| Crossplane | Composition engine — translates environment YAML into K8s resources |
+| Crossplane | Composition engine — translates Environment claims into namespaces and K8s resources |
 | Backstage  | Developer portal — self-service UI, software catalog, scaffolder |
 | Git        | Source of truth for environment definitions                      |
 | Kubernetes | Runtime platform                                                 |

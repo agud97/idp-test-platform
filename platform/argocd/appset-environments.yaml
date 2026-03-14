@@ -33,7 +33,7 @@ spec:
           include: '{{ .path.filename }}'
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{ normalize (printf "env-%s-%s" (index .path.segments 1) (trimSuffix ".yaml" .path.filename)) }}'
+        namespace: crossplane-system
       ignoreDifferences:
         - group: apiextensions.crossplane.io
           kind: CompositeResource
@@ -46,4 +46,3 @@ spec:
         syncOptions:
           - CreateNamespace=true
           - RespectIgnoreDifferences=true
-

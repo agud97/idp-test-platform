@@ -20,9 +20,9 @@
 2. Developer commits the manifest to the designated environments folder in the Git repository.
 3. Developer pushes the commit to the remote repository.
 4. ArgoCD detects the new commit and triggers a sync.
-5. System validates the manifest against the environment CRD schema.
-6. Crossplane reads the manifest and generates the required Kubernetes resources (namespace, deployments, services, config maps).
-7. System provisions enabled components and their databases.
+5. System validates the manifest against the Environment claim/XRD schema.
+6. Crossplane reconciles the Environment claim into a dedicated workload namespace, baseline NetworkPolicies, and child component composite resources.
+7. System provisions enabled components and their databases from those child composites.
 8. ArgoCD reports environment status as `Synced`.
 9. Developer receives confirmation that the environment is ready.
 
@@ -49,7 +49,7 @@
 
 ### A3: Resource Provisioning Failure
 
-**Trigger:** Crossplane fails to create one or more Kubernetes resources (step 6)
+**Trigger:** Crossplane fails to reconcile the Environment claim or one of its child composite resources (step 6)
 **Flow:**
 
 1. System records the error in ArgoCD events.

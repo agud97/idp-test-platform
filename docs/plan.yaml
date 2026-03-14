@@ -2,10 +2,10 @@ plan:
   name: "IDP Test Environment Platform"
   description: >
     End-to-end implementation plan for the GitOps-based Internal Developer Platform.
-    Covers CRD + Crossplane infrastructure, CLI migration tooling, Backstage portal,
-    and a full acceptance test suite.
+    Covers Environment claim/XRD + Crossplane infrastructure, CLI migration tooling,
+    Backstage portal, and a full acceptance test suite.
   constraints_check:
-    phases: 5       # limit: 5  ✓
+    phases: 6
     max_tasks_per_phase: 7  # limit: 7  ✓
     all_tasks_have_validation: true  # ✓
     all_phases_have_checkpoint: true  # ✓
@@ -57,16 +57,16 @@ plan:
     required_env:
       - name: KUBECONFIG
         value_from_file: "/root/codex/kubeconfig_6144665"
-        used_by: [phase-2, phase-3, phase-5]
+        used_by: [phase-2, phase-2.7, phase-3, phase-5]
       - name: GITHUB_TOKEN
         value_from_file: "/root/codex/token-gh"
-        used_by: [phase-1, phase-4]
+        used_by: [phase-1, phase-2.7, phase-4, phase-5]
       - name: GIT_REPO_URL
         value: "https://github.com/agud97/idp-test-platform.git"
-        used_by: [phase-1, phase-2, phase-4]
+        used_by: [phase-1, phase-2, phase-2.7, phase-4, phase-5]
       - name: GIT_LOCAL_PATH
         value: "~/codex/idp-test-platform"
-        used_by: [phase-1, phase-2, phase-3, phase-4, phase-5]
+        used_by: [phase-1, phase-2, phase-2.7, phase-3, phase-4, phase-5]
 
     # -- Platform installation strategy: GitOps-only ---------------------
     # ArgoCD is the SOLE deployment engine. All platform services (Crossplane,
@@ -262,8 +262,8 @@ plan:
       description: >
         Implement all Kubernetes-side infrastructure: Crossplane Compositions
         for each component type, ArgoCD ApplicationSet, and baseline
-        NetworkPolicy templates. After this phase the platform can provision
-        real environments from committed YAML manifests.
+        NetworkPolicy templates. After this phase the platform has the
+        lower-level component primitives required for environment provisioning.
 
       tasks:
 
@@ -407,14 +407,139 @@ plan:
 
       checkpoint:
         description: >
-          Human review: verify the full provisioning loop works end-to-end
-          on a real cluster before building application-layer tooling.
+          Human review: verify the lower-level component primitives are in place
+          before adding the Environment reconciliation layer.
         criteria:
-          - "Commit a 2-component environment YAML → both reach Running within 5 min (AC-001)"
-          - "Set one component enabled:false → its resources deleted within 3 min (AC-005)"
-          - "Manually delete a resource → ArgoCD restores it within 3 min (AC-037)"
+          - "One committed Environment manifest produces exactly one ArgoCD Application"
+          - "XWebapp/XPostgresql/XRedis compositions render correctly from fixtures"
           - "Cross-namespace pod connection is refused by NetworkPolicy (AC-019)"
           - "crossplane beta validate passes for all three Compositions"
+
+    # ─────────────────────────────────────────────────────────────────
+    - id: phase-2.7
+      name: "Environment Reconciliation"
+      description: >
+        Add the missing Environment claim reconciliation layer so that a
+        committed `kind: Environment` manifest becomes a Crossplane-driven
+        workload namespace plus per-component composite resources. This phase
+        closes the gap between the user-facing Environment API and the existing
+        XWebapp/XPostgresql/XRedis primitives.
+
+      tasks:
+
+        - id: task-2.7.1
+          name: "Convert Environment CRD into Crossplane XRD + claim"
+          description: >
+            Replace the plain Environment CRD with a Crossplane
+            CompositeResourceDefinition that exposes `kind: Environment` as the
+            namespaced claim developers commit under environments/<team>/. Keep
+            the current user-facing schema: spec.owner, spec.team,
+            spec.components[]. Preserve the CEL uniqueness validation and status
+            subresource contract while making the claim compatible with an
+            Environment Composition.
+          artifact: "platform/crds/environment.yaml"
+          depends_on: [task-2.3]
+          validation: >
+            `kubectl apply --dry-run=client -f platform/crds/environment.yaml`
+            exits 0. `crossplane beta validate platform/crds/environment.yaml`
+            exits 0. A fixture claim with duplicate component names is rejected
+            by schema/CEL validation.
+
+        - id: task-2.7.2
+          name: "Environment Composition"
+          description: >
+            Write platform/crossplane/environment/composition.yaml. The
+            Composition must:
+            (1) derive the workload namespace from team + environment name,
+            (2) create that Namespace,
+            (3) create the three baseline NetworkPolicies inside it,
+            (4) create one XWebappInstance / XPostgresqlInstance /
+            XRedisInstance child composite per spec.components[] entry based on
+            component type,
+            (5) omit disabled components from desired state so Crossplane prunes
+            their resources, and
+            (6) pass imageTag, replicas, configOverrides, team, and
+            environmentName down to child composites.
+          artifact: "platform/crossplane/environment/composition.yaml"
+          depends_on: [task-2.7.1, task-2.6]
+          validation: >
+            `crossplane beta validate platform/crossplane/environment/` exits 0.
+            `crossplane beta render` with a fixture Environment claim produces:
+            one Namespace, three NetworkPolicies, and the expected child
+            composites. Rendering the same fixture with one component
+            enabled=false omits that child composite while keeping it in the
+            claim spec.
+
+        - id: task-2.7.3
+          name: "Crossplane ProviderConfig and package wiring"
+          description: >
+            Add the repo-hosted Crossplane provider manifests required by the
+            existing and new Compositions, including a Provider and
+            ProviderConfig named `kubernetes-provider`. Ensure all repo-hosted
+            Compositions have the providerConfigRef they require and that the
+            provider is installed by GitOps rather than imperative kubectl
+            commands.
+          artifact: "platform/crossplane/provider-kubernetes.yaml"
+          depends_on: [task-2.4]
+          validation: >
+            `kubectl apply --dry-run=client -f platform/crossplane/` exits 0.
+            On the cluster, `kubectl get provider.pkg.crossplane.io` and
+            `kubectl get providerconfig.kubernetes.crossplane.io` show the
+            expected provider and `kubernetes-provider` ProviderConfig.
+
+        - id: task-2.7.4
+          name: "GitOps deploy repo-hosted Crossplane definitions"
+          description: >
+            Extend platform/argocd/app-crossplane.yaml so the Crossplane ArgoCD
+            Application becomes multi-source: it must keep the upstream chart
+            source and additionally deploy the repo-hosted CRDs, XRDs,
+            Compositions, EnvironmentConfig, and ProviderConfig manifests from
+            platform/crds/ and platform/crossplane/. Also update
+            appset-environments.yaml so committed Environment claims are applied
+            into a stable control namespace rather than the workload namespace;
+            the Environment Composition creates the workload namespace itself.
+          artifact: >
+            platform/argocd/app-crossplane.yaml +
+            platform/argocd/appset-environments.yaml
+          depends_on: [task-2.7.2, task-2.7.3]
+          validation: >
+            `kubectl apply --dry-run=client -f platform/argocd/` exits 0.
+            After sync, `kubectl get xrd,composition -A` and
+            `kubectl get providerconfig.kubernetes.crossplane.io` show the
+            repo-hosted definitions installed by the Crossplane Argo app.
+
+        - id: task-2.7.5
+          name: "Environment reconciliation smoke test"
+          description: >
+            Prove the completed provisioning chain end to end with a temporary
+            smoke Environment claim committed under environments/test/. Verify
+            that ArgoCD creates one Application, Crossplane accepts the claim,
+            the derived workload namespace appears, baseline NetworkPolicies are
+            present there, and enabled child components create their expected
+            resources. Then remove the smoke manifest and verify the ArgoCD
+            Application, claim, workload namespace, and child resources are
+            fully pruned.
+          artifact: "environments/test/reconciliation-smoke.yaml"
+          depends_on: [task-2.7.4]
+          validation: >
+            Commit environments/test/reconciliation-smoke.yaml and verify:
+            (1) exactly one ArgoCD Application is created,
+            (2) the Environment claim reaches Ready/Synced state,
+            (3) the workload namespace exists with the three baseline
+            NetworkPolicies, and
+            (4) at least one enabled component Deployment becomes Ready.
+            Delete the file and verify the Application and workload namespace
+            are removed within 5 minutes.
+
+      checkpoint:
+        description: >
+          Human review: verify the user-facing Environment API now reconciles
+          end to end before resuming feature work and acceptance testing.
+        criteria:
+          - "A committed kind: Environment claim provisions a workload namespace and child composites end to end"
+          - "The workload namespace is created by the Environment Composition, not by the ArgoCD destination namespace"
+          - "Crossplane repo-hosted definitions and kubernetes-provider are installed by GitOps"
+          - "Removing the manifest prunes the Application, claim, and workload namespace cleanly"
 
     # ─────────────────────────────────────────────────────────────────
     - id: phase-3
@@ -727,7 +852,7 @@ plan:
             Each test uses a unique environment name to avoid conflicts.
             Measure actual elapsed time and assert against SLA thresholds.
           artifact: "tests/acceptance/lifecycle_test.go"
-          depends_on: [task-2.5, task-2.6]
+          depends_on: [task-2.7.5]
           validation: >
             `go test ./tests/acceptance/... -run TestLifecycle -v`
             all pass on the dedicated test cluster. AC-001 timing
@@ -746,7 +871,7 @@ plan:
             AC-016 (DB deleted with disabled component ≤3 min),
             AC-018 (DB credentials never in ConfigMap or env literals).
           artifact: "tests/acceptance/components_test.go"
-          depends_on: [task-5.1]
+          depends_on: [task-2.7.5, task-5.1]
           validation: >
             `go test ./tests/acceptance/... -run TestComponents -v` all pass.
             AC-018: grep all ConfigMaps and Deployment env[].value fields
@@ -766,7 +891,7 @@ plan:
             AC-039: verify Git commit history contains author + diff for
             each programmatic change made during tests.
           artifact: "tests/acceptance/gitops_test.go"
-          depends_on: [task-5.1, task-5.2]
+          depends_on: [task-2.7.5, task-5.1, task-5.2]
           validation: >
             `go test ./tests/acceptance/... -run TestGitOps -v` all pass.
             AC-019: test records TCP dial error type = "connection refused"

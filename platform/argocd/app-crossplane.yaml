@@ -9,10 +9,20 @@ metadata:
     idp.platform.io/team: platform
 spec:
   project: default
-  source:
-    repoURL: https://charts.crossplane.io/stable
-    chart: crossplane
-    targetRevision: 1.14.x
+  sources:
+    - repoURL: https://charts.crossplane.io/stable
+      chart: crossplane
+      targetRevision: 1.14.x
+    - repoURL: https://github.com/agud97/idp-test-platform.git
+      targetRevision: feature/phase-1-foundation
+      path: platform/crds
+      directory:
+        recurse: true
+    - repoURL: https://github.com/agud97/idp-test-platform.git
+      targetRevision: feature/phase-1-foundation
+      path: platform/crossplane
+      directory:
+        recurse: true
   destination:
     server: https://kubernetes.default.svc
     namespace: crossplane-system
@@ -22,4 +32,4 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-
+      - ServerSideApply=true

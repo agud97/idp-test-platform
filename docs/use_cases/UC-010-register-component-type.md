@@ -77,7 +77,7 @@ Every component type must have a corresponding Crossplane Composition. Component
 
 ### BR-002: No Schema Breaking Changes
 
-Adding a new component type must not change the environment CRD schema in a way that invalidates existing environment manifests.
+Adding a new component type must not change the Environment claim/XRD schema in a way that invalidates existing environment manifests.
 
 ### BR-003: Platform Engineer Authority
 

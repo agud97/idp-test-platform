@@ -19,8 +19,8 @@
 2. Developer sets `enabled: false` for the target application component.
 3. Developer commits and pushes the change to the Git repository.
 4. ArgoCD detects the commit and triggers reconciliation.
-5. Crossplane marks all resources of the component for deletion (Deployment, Service, ConfigMap).
-6. If the component had an associated database, Crossplane deletes the DatabaseInstance.
+5. Crossplane removes the disabled component from the Environment claim's desired child composite set.
+6. If the component had an associated database, Crossplane prunes the database child composite and its managed resources.
 7. Kubernetes garbage-collects all associated resources.
 8. All component resources are removed from the namespace within 3 minutes.
 9. ArgoCD updates environment status to `Synced`.

@@ -1,0 +1,245 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: environment-composition
+  labels:
+    app.kubernetes.io/managed-by: crossplane
+    idp.platform.io/environment: shared
+    idp.platform.io/team: platform
+spec:
+  compositeTypeRef:
+    apiVersion: idp.platform.io/v1alpha1
+    kind: XEnvironment
+  mode: Pipeline
+  pipeline:
+    - step: render-environment
+      functionRef:
+        name: function-go-templating
+      input:
+        apiVersion: gotemplating.fn.crossplane.io/v1beta1
+        kind: GoTemplate
+        source: Inline
+        inline:
+          template: |
+            {{- $xr := getCompositeResource . -}}
+            {{- $spec := $xr.spec -}}
+            {{- $envName := $xr.metadata.name -}}
+            {{- $team := default "platform" $spec.team -}}
+            {{- $namespaceBase := regexReplaceAll "[^a-z0-9-]+" (lower (printf "env-%s-%s" $team $envName)) "-" -}}
+            {{- $namespace := trimSuffix "-" (trunc 63 $namespaceBase) -}}
+            ---
+            apiVersion: kubernetes.crossplane.io/v1alpha2
+            kind: Object
+            metadata:
+              annotations:
+                {{ setResourceNameAnnotation "namespace" }}
+                gotemplating.fn.crossplane.io/ready: "True"
+              labels:
+                app.kubernetes.io/managed-by: crossplane
+                idp.platform.io/environment: {{ $envName }}
+                idp.platform.io/team: {{ $team }}
+            spec:
+              deletionPolicy: Delete
+              providerConfigRef:
+                name: kubernetes-provider
+              forProvider:
+                manifest:
+                  apiVersion: v1
+                  kind: Namespace
+                  metadata:
+                    name: {{ $namespace }}
+                    labels:
+                      app.kubernetes.io/managed-by: crossplane
+                      idp.platform.io/environment: {{ $envName }}
+                      idp.platform.io/team: {{ $team }}
+            ---
+            apiVersion: kubernetes.crossplane.io/v1alpha2
+            kind: Object
+            metadata:
+              annotations:
+                {{ setResourceNameAnnotation "deny-cross-namespace-ingress" }}
+                gotemplating.fn.crossplane.io/ready: "True"
+              labels:
+                app.kubernetes.io/managed-by: crossplane
+                idp.platform.io/environment: {{ $envName }}
+                idp.platform.io/team: {{ $team }}
+            spec:
+              deletionPolicy: Delete
+              providerConfigRef:
+                name: kubernetes-provider
+              forProvider:
+                manifest:
+                  apiVersion: networking.k8s.io/v1
+                  kind: NetworkPolicy
+                  metadata:
+                    name: deny-cross-namespace-ingress
+                    namespace: {{ $namespace }}
+                    labels:
+                      app.kubernetes.io/managed-by: crossplane
+                      idp.platform.io/environment: {{ $envName }}
+                      idp.platform.io/team: {{ $team }}
+                  spec:
+                    podSelector: {}
+                    policyTypes:
+                      - Ingress
+            ---
+            apiVersion: kubernetes.crossplane.io/v1alpha2
+            kind: Object
+            metadata:
+              annotations:
+                {{ setResourceNameAnnotation "allow-intra-namespace" }}
+                gotemplating.fn.crossplane.io/ready: "True"
+              labels:
+                app.kubernetes.io/managed-by: crossplane
+                idp.platform.io/environment: {{ $envName }}
+                idp.platform.io/team: {{ $team }}
+            spec:
+              deletionPolicy: Delete
+              providerConfigRef:
+                name: kubernetes-provider
+              forProvider:
+                manifest:
+                  apiVersion: networking.k8s.io/v1
+                  kind: NetworkPolicy
+                  metadata:
+                    name: allow-intra-namespace
+                    namespace: {{ $namespace }}
+                    labels:
+                      app.kubernetes.io/managed-by: crossplane
+                      idp.platform.io/environment: {{ $envName }}
+                      idp.platform.io/team: {{ $team }}
+                  spec:
+                    podSelector: {}
+                    policyTypes:
+                      - Ingress
+                      - Egress
+                    ingress:
+                      - from:
+                          - podSelector: {}
+                    egress:
+                      - to:
+                          - podSelector: {}
+            ---
+            apiVersion: kubernetes.crossplane.io/v1alpha2
+            kind: Object
+            metadata:
+              annotations:
+                {{ setResourceNameAnnotation "allow-dns-egress" }}
+                gotemplating.fn.crossplane.io/ready: "True"
+              labels:
+                app.kubernetes.io/managed-by: crossplane
+                idp.platform.io/environment: {{ $envName }}
+                idp.platform.io/team: {{ $team }}
+            spec:
+              deletionPolicy: Delete
+              providerConfigRef:
+                name: kubernetes-provider
+              forProvider:
+                manifest:
+                  apiVersion: networking.k8s.io/v1
+                  kind: NetworkPolicy
+                  metadata:
+                    name: allow-dns-egress
+                    namespace: {{ $namespace }}
+                    labels:
+                      app.kubernetes.io/managed-by: crossplane
+                      idp.platform.io/environment: {{ $envName }}
+                      idp.platform.io/team: {{ $team }}
+                  spec:
+                    podSelector: {}
+                    policyTypes:
+                      - Egress
+                    egress:
+                      - to:
+                          - namespaceSelector:
+                              matchLabels:
+                                kubernetes.io/metadata.name: kube-system
+                        ports:
+                          - protocol: UDP
+                            port: 53
+                          - protocol: TCP
+                            port: 53
+            {{- range $index, $component := $spec.components }}
+            {{- if $component.enabled }}
+            {{- $resourceName := printf "component-%d-%s" $index $component.name -}}
+            {{- if eq $component.type "webapp" }}
+            ---
+            apiVersion: app.idp.platform.io/v1alpha1
+            kind: XWebappInstance
+            metadata:
+              annotations:
+                {{ setResourceNameAnnotation $resourceName }}
+              labels:
+                app.kubernetes.io/managed-by: crossplane
+                idp.platform.io/environment: {{ $envName }}
+                idp.platform.io/team: {{ $team }}
+            spec:
+              componentName: {{ $component.name }}
+              namespace: {{ $namespace }}
+              environmentName: {{ $envName }}
+              team: {{ $team }}
+              enabled: true
+              {{- if $component.imageTag }}
+              imageTag: {{ $component.imageTag | quote }}
+              {{- end }}
+              {{- if hasKey $component "replicas" }}
+              replicas: {{ $component.replicas }}
+              {{- end }}
+              {{- if $component.configOverrides }}
+              configOverrides:
+                {{- range $key, $value := $component.configOverrides }}
+                {{ $key }}: {{ $value | quote }}
+                {{- end }}
+              {{- end }}
+            {{- else if eq $component.type "postgresql" }}
+            ---
+            apiVersion: database.idp.platform.io/v1alpha1
+            kind: XPostgresqlInstance
+            metadata:
+              annotations:
+                {{ setResourceNameAnnotation $resourceName }}
+              labels:
+                app.kubernetes.io/managed-by: crossplane
+                idp.platform.io/environment: {{ $envName }}
+                idp.platform.io/team: {{ $team }}
+            spec:
+              componentName: {{ $component.name }}
+              namespace: {{ $namespace }}
+              environmentName: {{ $envName }}
+              team: {{ $team }}
+              enabled: true
+              {{- if $component.imageTag }}
+              imageTag: {{ $component.imageTag | quote }}
+              {{- end }}
+            {{- else if eq $component.type "redis" }}
+            ---
+            apiVersion: database.idp.platform.io/v1alpha1
+            kind: XRedisInstance
+            metadata:
+              annotations:
+                {{ setResourceNameAnnotation $resourceName }}
+              labels:
+                app.kubernetes.io/managed-by: crossplane
+                idp.platform.io/environment: {{ $envName }}
+                idp.platform.io/team: {{ $team }}
+            spec:
+              componentName: {{ $component.name }}
+              namespace: {{ $namespace }}
+              environmentName: {{ $envName }}
+              team: {{ $team }}
+              enabled: true
+              {{- if $component.imageTag }}
+              imageTag: {{ $component.imageTag | quote }}
+              {{- end }}
+            {{- end }}
+            {{- end }}
+            {{- end }}
+            ---
+            apiVersion: idp.platform.io/v1alpha1
+            kind: XEnvironment
+            status:
+              phase: Progressing
+              message: Rendering environment resources
+    - step: automatically-detect-ready-composed-resources
+      functionRef:
+        name: function-auto-ready

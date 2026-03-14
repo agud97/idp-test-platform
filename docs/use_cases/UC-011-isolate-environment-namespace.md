@@ -18,8 +18,8 @@
 
 ## Main Success Scenario
 
-1. System derives the namespace name from the environment name.
-2. System creates a dedicated Kubernetes namespace for the environment.
+1. System derives the workload namespace name from team plus environment name.
+2. The Environment Composition creates a dedicated Kubernetes namespace for the environment.
 3. System applies a default NetworkPolicy to the namespace that denies all ingress from other environment namespaces.
 4. System applies a NetworkPolicy that allows intra-namespace traffic (pods within the same environment can communicate).
 5. System applies a NetworkPolicy that allows egress to cluster-internal DNS.
@@ -74,4 +74,4 @@ The default NetworkPolicy for every environment namespace must deny all ingress 
 
 ### BR-003: Namespace Naming Convention
 
-Namespace names must follow the pattern `env-<environment-name>` and must comply with Kubernetes DNS label constraints (lowercase, alphanumeric, hyphens, max 63 characters).
+Namespace names must follow the pattern `env-<team>-<environment-name>` and must comply with Kubernetes DNS label constraints (lowercase, alphanumeric, hyphens, max 63 characters).

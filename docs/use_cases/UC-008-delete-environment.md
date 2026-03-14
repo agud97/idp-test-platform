@@ -20,9 +20,9 @@
 2. Developer deletes or archives the manifest file from the environments folder.
 3. Developer commits and pushes the change.
 4. ArgoCD detects the removal and triggers deletion of the ArgoCD Application.
-5. Crossplane deletes all Kubernetes resources associated with the environment (Deployments, Services, ConfigMaps, DatabaseInstances, Secrets).
-6. Kubernetes garbage-collects all resources in the environment namespace.
-7. Namespace is deleted.
+5. Crossplane deletes the Environment claim and all child composite resources associated with the environment.
+6. Kubernetes garbage-collects all managed resources in the workload namespace.
+7. The workload namespace created by the Environment Composition is deleted.
 8. System removes the environment entry from the Backstage software catalog.
 9. ArgoCD Application record is removed.
 

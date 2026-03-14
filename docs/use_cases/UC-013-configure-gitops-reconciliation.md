@@ -22,7 +22,7 @@
 4. ArgoCD applies the Application manifest and begins watching the environments folder.
 5. ArgoCD performs an initial sync, creating any environment resources that do not yet exist in the cluster.
 6. ArgoCD enters continuous reconciliation mode: it polls the Git repository every 3 minutes and compares desired state (Git) with live state (cluster).
-7. If drift is detected (manual `kubectl apply` or deletion), ArgoCD reverts the cluster to the Git-defined state automatically.
+7. If drift is detected (manual `kubectl apply` or deletion), ArgoCD re-applies the committed Environment claim and Crossplane reconciles the cluster back to the Git-defined state automatically.
 8. Platform engineer verifies reconciliation is working by checking ArgoCD Application health status.
 
 ## Alternative Flows
@@ -84,4 +84,4 @@ All environment ArgoCD Applications must have `selfHeal: true` to prevent manual
 
 ### BR-003: ArgoCD Exclusivity
 
-ArgoCD is the sole CD engine for environment management. Other tools must not apply environment manifests directly to the cluster.
+ArgoCD is the sole CD engine for environment management. Other tools must not apply Environment manifests directly to the cluster.

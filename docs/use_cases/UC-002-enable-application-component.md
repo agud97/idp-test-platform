@@ -21,7 +21,7 @@
 3. Developer commits and pushes the change to the Git repository.
 4. ArgoCD detects the commit and triggers reconciliation.
 5. System validates the updated manifest.
-6. Crossplane creates the Kubernetes resources for the component (namespace entry, Deployment, Service, ConfigMap).
+6. Crossplane updates the Environment claim's child composite resources for the component and creates the required Kubernetes resources (Deployment, Service, ConfigMap).
 7. If the component type supports a database, system executes UC-004 (Provision Database Alongside App).
 8. All resources reach a healthy running state.
 9. ArgoCD updates environment status to `Synced`.

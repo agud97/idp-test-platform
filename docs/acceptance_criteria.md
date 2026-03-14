@@ -10,17 +10,17 @@
 ## 1. Environment Lifecycle
 
 ### AC-001 · Environment creation — happy path
-**WHEN** a developer commits a valid environment YAML manifest to the GitOps repository
+**WHEN** a developer commits a valid `kind: Environment` YAML manifest to the GitOps repository
 **THEN** ArgoCD detects the commit and begins reconciliation
 **SHALL** the environment reach `Synced` status within 5 minutes and all enabled components are running in a dedicated namespace
 
 ### AC-002 · Environment creation — maximum load
-**WHEN** a developer commits an environment manifest with 5 enabled components, each requiring a database
+**WHEN** a developer commits an Environment manifest with 5 enabled components, each requiring a database
 **THEN** ArgoCD reconciles all 10 resources in parallel
 **SHALL** all components and databases reach healthy state within 5 minutes
 
 ### AC-003 · Environment creation — invalid YAML schema
-**WHEN** a developer commits an environment manifest that violates the CRD schema
+**WHEN** a developer commits an Environment manifest that violates the claim/XRD schema
 **THEN** the system attempts to apply the manifest
 **SHALL** reject it with a human-readable validation error, set environment status to `Degraded`, and create zero Kubernetes resources
 
@@ -442,7 +442,7 @@
 ## 14. Performance SLAs
 
 ### AC-069 · Environment creation SLA — 5 minutes
-**WHEN** a valid environment manifest with up to 5 enabled components is committed to Git
+**WHEN** a valid Environment manifest with up to 5 enabled components is committed to Git
 **THEN** ArgoCD begins reconciliation
 **SHALL** the environment reach `Synced` status within 5 minutes of the push timestamp
 

@@ -11,7 +11,6 @@ spec:
   names:
     kind: XRedisInstance
     plural: xredisinstances
-  scope: Namespaced
   versions:
     - name: v1alpha1
       served: true
@@ -70,4 +69,3 @@ spec:
         - name: Service
           type: string
           jsonPath: .status.serviceName
-

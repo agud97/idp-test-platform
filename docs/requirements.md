@@ -10,7 +10,7 @@
 
 | ID     | Title                           | User Story                                                                                                                                              | Priority | Status |
 |--------|---------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|----------|--------|
-| FR-001 | Submit environment manifest     | As a developer, I want to submit a single YAML file to create a test environment so that I can provision everything I need without writing Kubernetes manifests. | High     | Open   |
+| FR-001 | Submit environment manifest     | As a developer, I want to submit a single `kind: Environment` YAML claim to create a test environment so that I can provision everything I need without writing Kubernetes manifests. | High     | Open   |
 | FR-002 | Enable application component    | As a developer, I want to set `enabled: true` for an application in my YAML so that all its Kubernetes resources (namespace, deployments, services, databases) are created automatically. | High     | Open   |
 | FR-003 | Disable application component   | As a developer, I want to set `enabled: false` for an application in my YAML so that all its Kubernetes resources are removed automatically.             | High     | Open   |
 | FR-004 | Provision database per app      | As a developer, I want a database (PostgreSQL or Redis) to be provisioned alongside my application when enabled so that I do not need to manage database infrastructure manually. | High     | Open   |
@@ -22,7 +22,7 @@
 | FR-010 | Register new component type     | As a platform engineer, I want to add a new application component type to the platform catalog so that developers can include it in their environment YAML without platform changes to the schema. | Medium   | Open   |
 | FR-011 | Isolate environments per namespace | As a QA engineer, I want each test environment to run in a dedicated Kubernetes namespace so that environments do not interfere with each other.        | High     | Open   |
 | FR-012 | Override component configuration | As a developer, I want to override default configuration values (e.g., replica count, image tag) for a component in my YAML so that I can test non-default scenarios. | Medium   | Open   |
-| FR-013 | GitOps reconciliation           | As a platform engineer, I want environment state to be continuously reconciled from Git by ArgoCD so that any manual drift is corrected automatically.    | High     | Open   |
+| FR-013 | GitOps reconciliation           | As a platform engineer, I want committed Environment claims to be continuously reconciled from Git by ArgoCD and Crossplane so that any manual drift is corrected automatically.    | High     | Open   |
 | FR-014 | View provisioning logs          | As a developer, I want to view provisioning events and error messages in the portal so that I can diagnose failures without accessing Kubernetes directly. | Medium   | Open   |
 | FR-015 | Convert docker-compose to IDP manifest | As a developer, I want a CLI tool that converts an existing `docker-compose.yml` into an IDP environment YAML so that I can migrate without rewriting the configuration from scratch. | High     | Open   |
 | FR-016 | Export legacy environment config | As a platform engineer, I want to export the configuration of a legacy docker-compose environment so that its services, environment variables, and volumes are available for migration even when direct access is restricted. | High     | Open   |
@@ -61,12 +61,12 @@
 | ID    | Title                       | Constraint                                                                                                   | Category  | Priority | Status |
 |-------|-----------------------------|--------------------------------------------------------------------------------------------------------------|-----------|----------|--------|
 | C-001 | GitOps tooling              | The reconciliation engine must be ArgoCD; no other CD tool may be introduced for environment management.      | Technical | High     | Open   |
-| C-002 | Composition engine          | Crossplane must be used to abstract Kubernetes resource creation; raw Kubernetes manifests must not be written directly by developers. | Technical | High     | Open   |
+| C-002 | Composition engine          | Crossplane must be used to abstract Kubernetes resource creation from the user-facing Environment claim down to workload resources; raw Kubernetes manifests must not be written directly by developers. | Technical | High     | Open   |
 | C-003 | Developer portal            | Backstage must be used as the self-service UI and software catalog; no alternative portal may be deployed.    | Technical | High     | Open   |
 | C-004 | Kubernetes runtime          | The platform must run on Kubernetes 1.26 or later.                                                           | Technical | High     | Open   |
 | C-005 | GitOps source of truth      | All environment definitions must be stored in Git; direct `kubectl apply` by developers is not permitted.     | Technical | High     | Open   |
 | C-006 | Namespace-per-environment   | Each environment must be provisioned in its own dedicated namespace; shared namespaces across environments are not allowed. | Technical | High     | Open   |
-| C-007 | Environment YAML schema     | The environment manifest must be a valid Kubernetes Custom Resource (CRD-backed) so that it can be versioned and validated by the API server. | Technical | Medium   | Open   |
+| C-007 | Environment YAML schema     | The environment manifest must be a valid Kubernetes Custom Resource claim backed by a Crossplane XRD so that it can be versioned and validated by the API server. | Technical | Medium   | Open   |
 | C-008 | Supported database engines  | Initially, only PostgreSQL and Redis are supported as managed database components; other engines require a new Crossplane Composition. | Technical | Medium   | Open   |
 | C-009 | No cloud provider dependency | The platform must run on any CNCF-conformant Kubernetes cluster without requiring managed cloud services (e.g., AWS RDS, GCP CloudSQL). | Technical | High     | Open   |
 | C-010 | Legacy platform coexistence  | The legacy docker-compose platform must remain operational and unchanged during the migration period; the new IDP must not require its shutdown as a prerequisite. | Business  | High     | Open   |
