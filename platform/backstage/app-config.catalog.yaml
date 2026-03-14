@@ -1,5 +1,9 @@
 backstage:
   appConfig:
+    backend:
+      reading:
+        allow:
+          - host: raw.githubusercontent.com
     catalog:
       locations:
         - type: url
