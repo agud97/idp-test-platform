@@ -35,13 +35,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Create kind cluster
+        uses: helm/kind-action@v1.10.0
+        with:
+          cluster_name: ci-crd-validate
+
       - name: Set up kubectl
         uses: azure/setup-kubectl@v4
         with:
           version: v1.34.3
 
       - name: Validate CRDs
-        run: kubectl apply --dry-run=client --validate=false -f platform/crds/
+        run: kubectl apply --dry-run=client -f platform/crds/
 
   composition-validate:
     runs-on: ubuntu-latest
