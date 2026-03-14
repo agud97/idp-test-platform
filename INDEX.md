@@ -8,6 +8,7 @@
 - [docs/status.md](docs/status.md)
 - [docs/POST_IMPLEMENTATION_DOC_CHANGES.md](docs/POST_IMPLEMENTATION_DOC_CHANGES.md)
 - [docs/NEXT_AGENT_RISKS_AND_RESOLVED_BLOCKERS.md](docs/NEXT_AGENT_RISKS_AND_RESOLVED_BLOCKERS.md)
+- [SESSION_BOOTSTRAP.md](SESSION_BOOTSTRAP.md)
 - [docs/ADDING_NEW_PLATFORM_COMPONENT_TYPE.md](docs/ADDING_NEW_PLATFORM_COMPONENT_TYPE.md)
 - [docs/NEW_COMPONENT_TYPE_PR_TEMPLATE.md](docs/NEW_COMPONENT_TYPE_PR_TEMPLATE.md)
 - [docs/ADDING_MULTIPLE_WEBAPPS.md](docs/ADDING_MULTIPLE_WEBAPPS.md)
@@ -135,6 +136,9 @@ Backstage и как это использовать вместе с GitOps:
 Если нужно понять, что следующий агент уже не должен расследовать заново, а что всё ещё остаётся внешним риском среды:
 - читай [docs/NEXT_AGENT_RISKS_AND_RESOLVED_BLOCKERS.md](docs/NEXT_AGENT_RISKS_AND_RESOLVED_BLOCKERS.md)
 
+Если нужна короткая стартовая памятка для любой новой сессии:
+- читай [SESSION_BOOTSTRAP.md](SESSION_BOOTSTRAP.md)
+
 ## Рекомендуемый порядок чтения
 
 ### Для руководителя / reviewer
@@ -185,6 +189,8 @@ Backstage и как это использовать вместе с GitOps:
   - что и почему было переписано в нормативных docs после исполнения
 - [docs/NEXT_AGENT_RISKS_AND_RESOLVED_BLOCKERS.md](docs/NEXT_AGENT_RISKS_AND_RESOLVED_BLOCKERS.md)
   - какие blockers уже сняты, а какие риски останутся на новом кластере
+- [SESSION_BOOTSTRAP.md](SESSION_BOOTSTRAP.md)
+  - короткий обязательный bootstrap для следующей сессии
 
 ## Если нужно начать с одного файла
 

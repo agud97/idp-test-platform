@@ -19,6 +19,10 @@
   - главный навигационный файл
   - помогает быстро выбрать нужный документ по задаче
 
+- [SESSION_BOOTSTRAP.md](../SESSION_BOOTSTRAP.md)
+  - короткий startup guide для следующей сессии
+  - какие файлы читать первыми и какие assumptions считать критичными
+
 ## Release / Delivery Documents
 
 - [RELEASE_SUMMARY.md](../RELEASE_SUMMARY.md)
