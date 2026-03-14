@@ -1,4 +1,4 @@
-# create
+# idempotent-reapply
 apiVersion: idp.platform.io/v1alpha1
 kind: Environment
 metadata:
