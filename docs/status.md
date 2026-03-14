@@ -2,8 +2,8 @@
 
 ## Current Position
 - Phase: phase-4
-- Task: task-4.4
-- Status: BLOCKED
+- Task: task-4.6
+- Status: COMPLETE
 
 ## Progress
 
@@ -42,9 +42,9 @@
 | task-4.1 | COMPLETE | Added Backstage OIDC config plus `auth.session.secret`, pushed a custom Backstage image with the OIDC provider module, created the Authentik provider/application and `backstage-secrets`, verified `GET /api/auth/oidc/start` returns a `302` redirect to Authentik, and validated test-user claims: `dev-alice` => `role=developer, team_id=alpha`, `platform-bob` => `role=platform_engineer, team_id=null`. |
 | task-4.2 | COMPLETE | Added static GitHub-backed catalog locations with `integrations.github` token wiring, pinned the initial catalog target to commit `1a7c2a4` to avoid branch-name slash parsing, corrected Kubernetes `caData` to the base64-encoded cluster CA, validated RBAC dry-run, confirmed authenticated catalog API returns 4 entities including `component:default/backstage-portal`, and confirmed authenticated Kubernetes workload queries return live pod/service/deployment data for that component. |
 | task-4.3 | COMPLETE | Added the `new-environment` scaffolder template plus skeleton files, packaged the catalog and templates into the Backstage image, registered the template from a local file-backed catalog, added a custom `github:repo:upsert` scaffolder action for updating the existing GitOps branch, validated a full live task run (`e9507faa-e4a7-48b1-a0b3-a3cf80e209e3`) that committed branch head `0c95e8ead5c0ebda2b8bf34dc509109133e32915`, generated `environments/platform/smoke-template-0314h.yaml` and `catalog/environments/platform-smoke-template-0314h.yaml`, and registered `component:default/platform-smoke-template-0314h` in the catalog. |
-| task-4.4 | BLOCKED | The plan requires `packages/backend/src/plugins/migrationDashboard.ts`, but this repo has no Backstage source workspace under `packages/`; the live portal runs from a prebuilt image patched through `platform/backstage/Dockerfile`, so the plugin cannot be compiled, imported, or validated without modifying files outside task-4.4 scope. |
-| task-4.5 | NOT_STARTED | |
-| task-4.6 | NOT_STARTED | |
+| task-4.4 | COMPLETE | Added `packages/backend/src/plugins/migrationDashboard.ts`, implemented and loaded a runtime Backstage `migration` backend plugin through the custom image path, exposed `GET /api/migration/status`, and validated live aggregation from SQLite tracker data in pod `backstage-6565c6cfd9-g6wkp`: 3 records with 2 completed returned `percentage=66`, then replacing the same tracker DB with a 4th registration immediately returned `total=4` and `percentage=50` with no restart. |
+| task-4.5 | COMPLETE | Added `packages/app/src/components/MigrationDashboard/index.tsx` and exposed a live `/migration` page through Backstage runtime wiring on `rootHttpRouter`; validated live that the page renders the required Team/Total/Completed/Validated/In Progress/Blocked/% table, contains a 60s refresh loop, and auto-updates without reload: a jsdom execution of the page script saw initial rows `alpha 3 2 0 0 0 66%`, then after replacing the tracker DB it refreshed to `alpha 4 4 0 0 0 100%` and made the `Gate PASSED` banner visible (`display: block`). |
+| task-4.6 | COMPLETE | Added the three migration runbooks plus `platform/backstage/app-config.techdocs.yaml`, packaged runbooks into the Backstage image, exposed a live `/docs` runbook portal through runtime wiring, and validated locally on `http://localhost:7007/docs` with Postgres-backed Backstage startup: landing page listed all 3 application types, each runbook page rendered all 5 UC-018 steps, and `/docs/runbooks/unknown-type` returned `200` with `Runbook missing — contact platform engineer`. |
 
 ### Phase 5: Acceptance Testing & Hardening
 | Task     | Status        | Notes |
@@ -62,12 +62,15 @@
 | phase-1 | REACHED | |
 | phase-2 | REACHED | |
 | phase-3 | REACHED | |
-| phase-4 | NOT_REACHED | |
+| phase-4 | REACHED | |
 | phase-5 | NOT_REACHED | |
 
 ## Blockers
-- task-4.4: The repository does not contain `packages/backend/` or any Backstage backend source tree. Implementing only `packages/backend/src/plugins/migrationDashboard.ts` cannot affect the running portal, because the deployed backend is a prebuilt image patched directly in `platform/backstage/Dockerfile`. Validating `GET /api/migration/status` would require additional changes outside the task artifact, such as wiring the plugin into the runtime image/build path.
+<!-- empty if none -->
 
 ## Deviations
 - task-4.3: User approved extending scope to edit `catalog/all-components.yaml` so the new scaffolder template can be registered in the static Backstage catalog.
 - task-4.3: User approved implementing a custom scaffolder backend action because the stock `github:repo:push` action could not safely update the existing populated GitOps branch.
+- task-4.4: User approved extending scope to runtime wiring changes because the repository has no Backstage source workspace; the backend plugin is authored at `packages/backend/src/plugins/migrationDashboard.ts` for spec compliance and loaded in the live portal through the prebuilt-image patch path in `platform/backstage/Dockerfile`.
+- task-4.5: User approved extending scope to runtime/build wiring changes because the repository has no Backstage app source workspace; the frontend source artifact is authored at `packages/app/src/components/MigrationDashboard/index.tsx`, while the live `/migration` route is served through `rootHttpRouter` in the prebuilt-image runtime path.
+- task-4.6: Implemented the required TechDocs runbooks under `docs/runbooks/`, but because the repository has no Backstage frontend source workspace or TechDocs content pipeline, the live `/docs` experience is served through a custom runtime module packaged into the prebuilt image while `platform/backstage/app-config.techdocs.yaml` and `helm-values.yaml` carry the TechDocs configuration.
