@@ -364,6 +364,8 @@ http://localhost:7007/catalog
 
 ## 10. Как использовать Kubernetes tab / live status
 
+Важно: catalog entry окружения должна иметь `spec.type: service`. Если стоит `type: environment` или другое значение — вкладка Kubernetes не отображается в prebuilt образе Backstage.
+
 Если environment entity и annotations настроены корректно, через Backstage можно:
 - открыть entity
 - перейти к Kubernetes status

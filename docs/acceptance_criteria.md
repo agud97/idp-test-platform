@@ -165,6 +165,11 @@
 **THEN** the system generates the YAML
 **SHALL** the committed manifest contain exactly the template structure with developer-supplied values substituted for all template parameters
 
+### AC-085 · Kubernetes tab visible on environment entity page
+**WHEN** a developer opens the catalog page of a deployed environment
+**THEN** Backstage renders the entity page
+**SHALL** display a "Kubernetes" tab showing live pods and deployments from the environment's namespace; the tab MUST be present without any manual configuration beyond the `backstage.io/kubernetes-cluster` and `backstage.io/kubernetes-namespace` annotations
+
 ---
 
 ## 5. Backstage Portal — Catalog & Status

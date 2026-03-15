@@ -289,6 +289,8 @@ The backend plugin **MUST** be implemented as a Backstage backend plugin at `pac
 
 **MUST** register scaffolder templates through the static Backstage catalog configuration that the running image actually ingests. Placing a template file under `templates/` alone is insufficient; the template **MUST** be reachable through `catalog.locations` or an equivalent file-backed catalog registration path packaged into the image.
 
+**MUST** use `spec.type: service` (not `environment`) for all environment catalog entries. In the prebuilt Backstage image, the Kubernetes tab is only rendered for `spec.type: service` entities. Other types fall into a default layout with no Kubernetes tab. This means the scaffolder template skeleton (`templates/new-environment/skeleton/catalog-info.yaml`) and all catalog entries under `catalog/environments/` MUST use `type: service`.
+
 ### 3.4 Crossplane Provider
 
 **MUST** use `provider-kubernetes` (crossplane-contrib) for creating in-cluster Kubernetes resources (Deployments, Services, ConfigMaps, Secrets) from Compositions.

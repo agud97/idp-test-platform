@@ -783,6 +783,13 @@ plan:
             include User in the allow list; without it, User entities are
             silently skipped during catalog ingestion.
 
+            IMPORTANT — entity type: all environment catalog entries
+            (catalog/environments/*.yaml and the scaffolder template skeleton)
+            MUST use spec.type: service (not environment). The prebuilt
+            Backstage image only shows the Kubernetes tab for service-type
+            entities; other types use a default layout without the Kubernetes
+            tab.
+
           artifact: >
             platform/backstage/app-config.catalog.yaml +
             platform/backstage/app-config.kubernetes.yaml +

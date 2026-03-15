@@ -19,6 +19,23 @@
 
 ## Matrix
 
+### Симптом: Kubernetes-вкладка отсутствует на странице компонента
+
+Вероятная причина:
+- `spec.type` в catalog entry не `service` (например `environment`, `website`, и т.д.)
+- В prebuilt Backstage образе Kubernetes-вкладка рендерится только для `spec.type: service`
+
+Команды:
+```bash
+# Проверить тип entity в каталоге
+curl -s "http://89.108.100.41:7007/api/catalog/entities?filter=kind=component,metadata.name=<name>" | python3 -c "import sys,json; e=json.load(sys.stdin); print(e[0]['spec']['type'] if e else 'not found')"
+# Ожидаемо: service
+```
+
+Исправление: изменить `spec.type: environment` → `spec.type: service` в catalog entry и в `templates/new-environment/skeleton/catalog-info.yaml`.
+
+---
+
 ### Симптом: Backstage показывает "Enter as a Guest User" вместо OIDC
 
 Вероятные причины:

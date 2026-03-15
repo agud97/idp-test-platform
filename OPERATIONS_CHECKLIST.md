@@ -189,6 +189,13 @@ curl -s "http://89.108.100.41:7007/api/catalog/entities?filter=kind=user,metadat
 
 Если `MISSING` — добавить User entity в `catalog/all-components.yaml` (email должен совпадать с email пользователя в Authentik).
 
+### Backstage-5b. Проверить spec.type в catalog entries
+
+```bash
+curl -s "http://89.108.100.41:7007/api/catalog/entities?filter=kind=component,spec.type=service" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d), 'service-type components')"
+# Все environment entries должны быть type=service, иначе Kubernetes-вкладка не появится
+```
+
 ### Backstage-5. Проверить end-to-end логин
 
 Открыть `http://backstage.idp.local:7007` в браузере (с `/etc/hosts` `89.108.100.41 backstage.idp.local` и `89.108.100.218 authentik-server.authentik.svc.cluster.local`), нажать "Sign in with OIDC", залогиниться как `akadmin` / `Admin1234!`.
