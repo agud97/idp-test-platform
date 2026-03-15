@@ -54,14 +54,17 @@ mb = mb.replace(gFrom, gTo);
 fs.writeFileSync(mbFile, mb);
 console.log('patched', mbFile);
 
-// 3. Patch index.html to add cache-busting query param to module-backstage URL
+// 3. Rename patched file to bust browser cache (new filename = new URL = no cache hit)
+const newMbFile = dir + '/module-backstage.oidcpatch.js';
+fs.renameSync(mbFile, newMbFile);
+const mapFile = mbFile + '.map';
+if (fs.existsSync(mapFile)) fs.renameSync(mapFile, newMbFile + '.map');
+
+// 4. Update index.html to reference the renamed file
 const htmlPath = '/app/packages/app/dist/index.html';
 let html = fs.readFileSync(htmlPath, 'utf8');
 const mbBase = mbFiles[0]; // e.g. module-backstage.3be92c1c.js
-html = html.replace(
-  new RegExp(mbBase.replace('.', '\\.'), 'g'),
-  mbBase + '?v=r6'
-);
+html = html.replace(new RegExp(mbBase.replace(/\./g, '\\.'), 'g'), 'module-backstage.oidcpatch.js');
 fs.writeFileSync(htmlPath, html);
-console.log('patched index.html cache-bust for', mbBase);
+console.log('renamed to module-backstage.oidcpatch.js and updated index.html');
 NODE
