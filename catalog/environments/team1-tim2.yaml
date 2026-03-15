@@ -1,0 +1,17 @@
+# Source: Backstage Scaffolder
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: team1-tim2
+  title: tim2
+  description: IDP test environment for team team1.
+  annotations:
+    backstage.io/kubernetes-cluster: primary
+    backstage.io/kubernetes-namespace: env-team1-tim2
+    idp.platform.io/environment-manifest: environments/team1/tim2.yaml
+    idp.platform.io/team: team1
+spec:
+  type: environment
+  lifecycle: experimental
+  owner: group:default/platform
+  system: idp-platform
