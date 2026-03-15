@@ -13,7 +13,6 @@ backstage:
             metadataUrl: http://authentik-server.authentik.svc.cluster.local/application/o/backstage/.well-known/openid-configuration
             clientId: backstage
             clientSecret: ${OAUTH_CLIENT_SECRET}
-            prompt: login
             signIn:
               resolvers:
                 - resolver: emailMatchingUserEntityProfileEmail
