@@ -21,12 +21,19 @@ backstage:
   appConfig:
     app:
       title: IDP Platform
-      baseUrl: http://localhost:7007
+      baseUrl: http://backstage.idp.local:30007
     backend:
-      baseUrl: http://localhost:7007
+      baseUrl: http://backstage.idp.local:30007
     techdocs:
       builder: local
       generator:
         runIn: local
       publisher:
         type: local
+
+service:
+  type: NodePort
+  ports:
+    backend: 7007
+  nodePorts:
+    backend: 30007
