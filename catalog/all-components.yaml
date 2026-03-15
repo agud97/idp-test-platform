@@ -51,3 +51,12 @@ metadata:
 spec:
   type: file
   target: /app/templates/new-environment/template.yaml
+---
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: environment-catalog-entries
+  description: Auto-loads all environment catalog entries from catalog/environments/.
+spec:
+  type: file
+  target: /app/catalog/environments/*.yaml
