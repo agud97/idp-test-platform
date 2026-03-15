@@ -17,11 +17,12 @@ backstage:
             signIn:
               resolvers:
                 - resolver: emailMatchingUserEntityProfileEmail
+    app:
+      signInPage: oidc
     backend:
       auth:
         keys:
           - secret: ${BACKSTAGE_BACKEND_AUTH_SECRET}
-    signInPage: oidc
     catalog:
       rules:
         - allow:
