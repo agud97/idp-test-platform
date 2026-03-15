@@ -53,4 +53,15 @@ mb = mb.replace(gFrom, gTo);
 
 fs.writeFileSync(mbFile, mb);
 console.log('patched', mbFile);
+
+// 3. Patch index.html to add cache-busting query param to module-backstage URL
+const htmlPath = '/app/packages/app/dist/index.html';
+let html = fs.readFileSync(htmlPath, 'utf8');
+const mbBase = mbFiles[0]; // e.g. module-backstage.3be92c1c.js
+html = html.replace(
+  new RegExp(mbBase.replace('.', '\\.'), 'g'),
+  mbBase + '?v=r6'
+);
+fs.writeFileSync(htmlPath, html);
+console.log('patched index.html cache-bust for', mbBase);
 NODE
