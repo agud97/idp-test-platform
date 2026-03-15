@@ -114,6 +114,30 @@
 
 ---
 
+## 4. Backstage Portal — Authentication
+
+### AC-081 · OIDC sign-in page renders correctly
+**WHEN** a user opens `http://backstage.idp.local:7007` in a browser
+**THEN** the Backstage frontend loads
+**SHALL** display a "Sign in with OIDC" button (not a "Enter as Guest" button); the guest sign-in option **shall not** be present
+
+### AC-082 · OIDC login — happy path
+**WHEN** a user clicks "Sign in with OIDC" and completes login on the Authentik page with valid credentials
+**THEN** the OIDC popup closes and the parent window receives the identity
+**SHALL** the user be signed in to Backstage, their display name visible in the top bar, and the catalog page accessible without further authentication prompts
+
+### AC-083 · OIDC login — user entity present in catalog
+**WHEN** a user completes OIDC authentication and Backstage attempts to resolve their identity
+**THEN** the sign-in resolver queries the Backstage catalog for a `kind: User` entity matching the authenticated user's email
+**SHALL** find the entity and complete sign-in successfully; if the entity is absent the error **shall** appear in Backstage backend logs and the user **shall** receive a clear sign-in failure message (not a silent redirect loop)
+
+### AC-084 · Browser cache — new image served after rebuild
+**WHEN** the Backstage Docker image is rebuilt and deployed
+**THEN** a user opens Backstage in a browser that previously cached the old frontend JS
+**SHALL** receive the new patched JS file (confirmed by a new filename, e.g., `module-backstage.oidcpatch.js`) without needing to manually clear the browser cache
+
+---
+
 ## 4. Backstage Portal — Environment Management
 
 ### AC-020 · Create environment via portal — happy path

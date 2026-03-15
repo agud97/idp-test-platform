@@ -32,6 +32,7 @@
 | FR-020 | Register legacy environment     | As a platform engineer, I want to register a legacy docker-compose environment in the migration tracker so that its migration progress can be monitored and the team's total count is accurate. | High     | Open   |
 | FR-021 | Mark migration as complete      | As a platform engineer, I want to mark a validated legacy environment as `completed` after its legacy instance has been decommissioned so that the deprecation gate can be evaluated. | High     | Open   |
 | FR-022 | Initiate legacy platform deprecation | As a platform engineer, I want to trigger a deprecation check that gates legacy platform shutdown on 100% of environments being `completed` so that no active environment is lost during decommissioning. | High     | Open   |
+| FR-023 | Authenticate to Backstage portal | As a developer, I want to log in to the Backstage portal using my Authentik (OIDC) credentials so that I can access all portal features with my verified identity. | High     | Open   |
 
 ---
 
@@ -53,6 +54,7 @@
 | NFR-010 | Portal response time      | Backstage UI pages must load within 3 seconds under normal load (up to 20 concurrent users).                  | Performance   | Medium   | Open   |
 | NFR-011 | docker-compose conversion accuracy | The docker-compose conversion tool must correctly map at least 90% of service definitions (image, ports, environment variables, volumes, dependencies) without manual correction. | Reliability   | High     | Open   |
 | NFR-012 | Migration documentation coverage  | The migration runbook must cover 100% of application types currently running on the legacy platform before the legacy platform deprecation date. | Maintainability | High   | Open   |
+| NFR-013 | Backstage OIDC login availability | A user with valid Authentik credentials must be able to complete OIDC login to Backstage without manual browser cache clearing, port-forwarding, or kubectl access. The OIDC sign-in button must be visible on first page load; the full login flow (button → Authentik popup → identity resolved → catalog accessible) must complete within 30 seconds. | Usability | High | Open |
 
 ---
 

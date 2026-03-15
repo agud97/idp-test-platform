@@ -707,23 +707,58 @@ plan:
         - id: task-4.1
           name: "Backstage authentication: Authentik OIDC"
           description: >
-            Configure Backstage app-config.yaml with auth.providers.oidc
-            pointing to Authentik at
-            http://authentik-server.authentik.svc.cluster.local:9000/application/o/backstage/.
-            Map LDAP group membership claims to platform roles
-            (developer, qa_engineer, team_lead, platform_engineer).
-            Disable guest auth. Create the Authentik OAuth2 provider
-            application for Backstage. Store OAUTH_CLIENT_SECRET in
-            Kubernetes Secret open-webui-sso pattern (Secret backstage-secrets,
-            key OAUTH_CLIENT_SECRET) in backstage namespace.
-          artifact: "platform/backstage/app-config.auth.yaml + Authentik provider config"
+            Configure Backstage OIDC authentication via Authentik.
+
+            CRITICAL — prebuilt image limitation: Backstage 1.x prebuilt image
+            has the sign-in page hardcoded in the compiled frontend JS bundle.
+            The app-config key app.signInPage: oidc has NO effect on the
+            prebuilt image. To get OIDC login working ALL of the following
+            are required:
+
+            (1) app-config (platform/backstage/app-config.auth.yaml):
+            Set auth.providers.oidc.production.metadataUrl to
+            http://authentik-server.authentik.svc.cluster.local/application/o/backstage/.well-known/openid-configuration
+            (Authentik port is 80, NOT 9000 as previously noted).
+            Set prompt: select_account — the Backstage default prompt=none
+            causes Authentik to return login_required immediately for
+            unauthenticated users; prompt=login causes an infinite re-auth
+            loop in Authentik. Set providers.guest: null. Resolver:
+            emailMatchingUserEntityProfileEmail.
+
+            (2) Dockerfile patching (platform/backstage/Dockerfile):
+            Patch module-backstage.*.js to replace the guest Component
+            with an OIDC popup that opens /api/auth/oidc/start?env=production
+            and listens for postMessage from the popup (payload structure:
+            {type:authorization_response, response:{backstageIdentity,profile}}).
+            Replace the B loader to check /api/auth/oidc/refresh?env=production.
+            Rename the patched file to module-backstage.oidcpatch.js to bust
+            the 2-week browser cache (Cache-Control: public, max-age=1209600).
+            Patch BOTH index.html AND index.html.tmpl — the app-backend serves
+            HTML from index.html.tmpl, patching only index.html has no effect.
+
+            (3) Authentik application: OAuth2/OIDC provider with client_id=backstage,
+            redirect_uri=http://backstage.idp.local:7007/api/auth/oidc/handler/frame.
+
+            (4) Secrets: OAUTH_CLIENT_SECRET, AUTH_SESSION_SECRET,
+            BACKSTAGE_BACKEND_AUTH_SECRET in Secret backstage-secrets
+            in backstage namespace.
+
+          artifact: >
+            platform/backstage/app-config.auth.yaml +
+            platform/backstage/Dockerfile +
+            Authentik provider config
           depends_on: [task-1.1]
           validation: >
-            Port-forward Backstage to localhost:7007. Navigate to
-            http://localhost:7007 — redirect to Authentik login page.
-            Log in as a test developer user → Backstage shows correct
-            username and role. Platform engineer user has team_id=null
-            and sees all catalog entries (AC-026).
+            Verify Backstage LoadBalancer is accessible (no port-forward needed):
+            curl -o /dev/null -w "%{http_code}" http://89.108.100.41:7007 → 200.
+            Add to /etc/hosts: 89.108.100.41 backstage.idp.local and
+            89.108.100.218 authentik-server.authentik.svc.cluster.local.
+            Open http://backstage.idp.local:7007 → "Sign in with OIDC" button
+            visible (not "Enter as Guest"). Click → Authentik popup opens.
+            Log in as akadmin / Admin1234! → popup closes → Backstage opens.
+            curl -s http://89.108.100.41:7007 | grep module-backstage →
+            module-backstage.oidcpatch.js (cache-bust confirmed).
+            (ref: AC-081, AC-082, AC-083, AC-084)
 
         - id: task-4.2
           name: "Backstage catalog and Kubernetes plugin"
@@ -731,10 +766,20 @@ plan:
             Configure static catalog.locations in app-config.yaml pointing
             to catalog/ directory. Write catalog/all-components.yaml as
             an initial catalog entry. Configure @backstage/plugin-kubernetes
-            with cluster endpoint https://194.58.110.52:6443, authProvider
-            serviceAccount, token from Secret backstage-k8s-sa-token.
-            Create SA backstage-k8s-reader + ClusterRole (get/list/watch
-            pods, deployments, replicasets, services) + ClusterRoleBinding.
+            with cluster endpoint, authProvider serviceAccount, token from
+            Secret backstage-k8s-sa-token. Create SA backstage-k8s-reader
+            + ClusterRole (get/list/watch pods, deployments, replicasets,
+            services) + ClusterRoleBinding.
+
+            IMPORTANT — User entities: catalog/all-components.yaml MUST
+            include a kind: User entity for each real user who will log in
+            via OIDC. The sign-in resolver emailMatchingUserEntityProfileEmail
+            looks up the user by the email from the OIDC token; if the entity
+            is absent, sign-in fails. At minimum include akadmin
+            (email: root@example.com). The catalog location rules MUST
+            include User in the allow list; without it, User entities are
+            silently skipped during catalog ingestion.
+
           artifact: >
             platform/backstage/app-config.catalog.yaml +
             platform/backstage/app-config.kubernetes.yaml +
@@ -744,8 +789,11 @@ plan:
           validation: >
             `kubectl apply --dry-run=client -f platform/backstage/rbac/`
             exits 0. Navigate to Backstage catalog and verify
-            catalog/all-components.yaml entry appears. Open an environment
-            component and verify Kubernetes tab shows live pod status (AC-028).
+            catalog/all-components.yaml entries appear including the User
+            entity for akadmin. Verify OIDC login completes without
+            "could not find user entity" error in Backstage logs.
+            Open an environment component and verify Kubernetes tab shows
+            live pod status (AC-028, AC-083).
 
         - id: task-4.3
           name: "Backstage scaffolder template: New Environment"

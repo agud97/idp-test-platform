@@ -266,7 +266,16 @@ The three baseline NetworkPolicies **MUST** be created by the Environment Compos
 
 **MUST** use a dedicated Kubernetes ServiceAccount `backstage-k8s-reader` with a ClusterRole limited to `get`, `list`, `watch` on pods, deployments, replicasets, and services. **MUST NOT** grant cluster-admin to the Backstage service account.
 
-**MUST** authenticate Backstage users via the existing **Authentik** OAuth2/OIDC provider on the cluster. Configure Backstage `auth.providers.oidc` pointing to `http://authentik-server.authentik.svc.cluster.local:9000/application/o/backstage/`. User `role` and `team` **MUST** be sourced from LDAP group membership claims injected by Authentik. Guest authentication **MUST** be disabled in production. (ref: NFR-006, AC-025, AC-026)
+**MUST** authenticate Backstage users via the existing **Authentik** OAuth2/OIDC provider on the cluster. Configure Backstage `auth.providers.oidc` with `metadataUrl: http://authentik-server.authentik.svc.cluster.local/application/o/backstage/.well-known/openid-configuration` (port **80**, not 9000). Guest authentication **MUST** be disabled in production (`providers.guest: null`). (ref: NFR-006, AC-025, AC-026)
+
+**MUST** set `prompt: select_account` in the OIDC provider config. The Backstage default (`prompt: none`) causes Authentik to return `login_required` immediately for unauthenticated users; `prompt: login` causes an infinite re-authentication loop in Authentik. `select_account` is the only value that allows interactive login without looping.
+
+**MUST** account for the prebuilt Backstage image limitation: the sign-in page UI is compiled into the frontend JS bundle and is **not configurable via `app.signInPage` in app-config**. To replace the hardcoded guest Component with OIDC:
+- Patch `module-backstage.*.js` in the `Dockerfile` to replace the guest `Component` with an OIDC popup and the `B` loader with a session-check via `/api/auth/oidc/refresh?env=production`.
+- Rename the patched file (e.g., `module-backstage.oidcpatch.js`) to bust the 2-week browser cache (`Cache-Control: public, max-age=1209600`).
+- Patch **both** `/app/packages/app/dist/index.html` **and** `/app/packages/app/dist/index.html.tmpl` to reference the renamed file. The app-backend serves HTML from `index.html.tmpl` (not `index.html`) — patching only `index.html` has no effect.
+
+**MUST** seed the Backstage catalog with a `kind: User` entity for every real user who will log in, with `spec.profile.email` matching the email in Authentik. The default sign-in resolver (`emailMatchingUserEntityProfileEmail`) looks up the user in the catalog by email; if the entity is absent, sign-in fails. At minimum, the admin user `akadmin` (email `root@example.com`) **MUST** be present in `catalog/all-components.yaml`. The catalog location **MUST** include `User` in its `rules.allow` list.
 
 **MUST** implement the migration tracking dashboard as a **custom Backstage plugin** (`@internal/plugin-migration-dashboard`) that:
 - Renders at route `/migration`
