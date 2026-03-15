@@ -790,6 +790,16 @@ plan:
             entities; other types use a default layout without the Kubernetes
             tab.
 
+            IMPORTANT — kubernetes-label-selector annotation: every environment
+            catalog entry MUST include backstage.io/kubernetes-label-selector
+            (or backstage.io/kubernetes-id). The isKubernetesAvailable predicate
+            in the prebuilt frontend checks for one of these two annotations;
+            without them the Kubernetes tab is not rendered even if
+            kubernetes-cluster and kubernetes-namespace are set. Use:
+              backstage.io/kubernetes-label-selector: idp.platform.io/team
+            This is a key-only label selector matching all IDP-managed pods
+            in the environment namespace.
+
           artifact: >
             platform/backstage/app-config.catalog.yaml +
             platform/backstage/app-config.kubernetes.yaml +

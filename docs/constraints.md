@@ -291,6 +291,13 @@ The backend plugin **MUST** be implemented as a Backstage backend plugin at `pac
 
 **MUST** use `spec.type: service` (not `environment`) for all environment catalog entries. In the prebuilt Backstage image, the Kubernetes tab is only rendered for `spec.type: service` entities. Other types fall into a default layout with no Kubernetes tab. This means the scaffolder template skeleton (`templates/new-environment/skeleton/catalog-info.yaml`) and all catalog entries under `catalog/environments/` MUST use `type: service`.
 
+**MUST** add `backstage.io/kubernetes-label-selector` annotation to every environment catalog entry. The `isKubernetesAvailable` function in the prebuilt Backstage frontend checks for the presence of `backstage.io/kubernetes-id` **or** `backstage.io/kubernetes-label-selector`. Without one of these annotations, the Kubernetes tab is not rendered — even if `backstage.io/kubernetes-cluster` and `backstage.io/kubernetes-namespace` are set. Use `backstage.io/kubernetes-label-selector: idp.platform.io/team` (key-only selector matching all IDP-managed pods in the environment namespace). Required annotations for the Kubernetes tab to work:
+```yaml
+backstage.io/kubernetes-cluster: primary
+backstage.io/kubernetes-namespace: env-<team>-<env>
+backstage.io/kubernetes-label-selector: idp.platform.io/team
+```
+
 ### 3.3.1 Known Limitation: Dockerfile JS Patching is Technical Debt
 
 The OIDC sign-in currently works via **direct patching of compiled JavaScript in the Dockerfile** (`module-backstage.*.js`). This is a PoC-acceptable workaround with the following known risks:

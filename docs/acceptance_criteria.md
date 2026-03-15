@@ -168,7 +168,7 @@
 ### AC-085 · Kubernetes tab visible on environment entity page
 **WHEN** a developer opens the catalog page of a deployed environment
 **THEN** Backstage renders the entity page
-**SHALL** display a "Kubernetes" tab showing live pods and deployments from the environment's namespace; the tab MUST be present without any manual configuration beyond the `backstage.io/kubernetes-cluster` and `backstage.io/kubernetes-namespace` annotations
+**SHALL** display a "Kubernetes" tab showing live pods and deployments from the environment's namespace; the tab requires three annotations: `backstage.io/kubernetes-cluster`, `backstage.io/kubernetes-namespace`, **and** `backstage.io/kubernetes-label-selector` (or `backstage.io/kubernetes-id`); the `isKubernetesAvailable` predicate returns false if the label-selector/id annotation is absent, causing the tab to not render regardless of other annotations
 
 ---
 

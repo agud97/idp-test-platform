@@ -21,18 +21,30 @@
 
 ### Симптом: Kubernetes-вкладка отсутствует на странице компонента
 
-Вероятная причина:
-- `spec.type` в catalog entry не `service` (например `environment`, `website`, и т.д.)
-- В prebuilt Backstage образе Kubernetes-вкладка рендерится только для `spec.type: service`
+Две независимых причины — обе должны быть исправлены:
 
-Команды:
+**Причина 1: `spec.type` не `service`**
+- В prebuilt Backstage образе Kubernetes-вкладка рендерится только для `spec.type: service`
+- Типы `environment`, `website`, и т.д. используют layout без Kubernetes-вкладки
+
+**Причина 2: отсутствует аннотация `backstage.io/kubernetes-label-selector` (или `kubernetes-id`)**
+- `isKubernetesAvailable` проверяет наличие `backstage.io/kubernetes-id` **или** `backstage.io/kubernetes-label-selector`
+- Наличия только `kubernetes-cluster` и `kubernetes-namespace` недостаточно — вкладка не появится
+- Это не задокументировано очевидно в Backstage docs; выявлено опытным путём
+
+Диагностика:
 ```bash
-# Проверить тип entity в каталоге
-curl -s "http://89.108.100.41:7007/api/catalog/entities?filter=kind=component,metadata.name=<name>" | python3 -c "import sys,json; e=json.load(sys.stdin); print(e[0]['spec']['type'] if e else 'not found')"
-# Ожидаемо: service
+# Проверить тип entity
+curl -s "http://89.108.100.41:7007/api/catalog/entities?filter=kind=component,metadata.name=<name>" | \
+  python3 -c "import sys,json; e=json.load(sys.stdin); print(e[0]['spec']['type'], e[0]['metadata'].get('annotations',{}).get('backstage.io/kubernetes-label-selector','MISSING')) if e else print('not found')"
+# Ожидаемо: service  idp.platform.io/team
 ```
 
-Исправление: изменить `spec.type: environment` → `spec.type: service` в catalog entry и в `templates/new-environment/skeleton/catalog-info.yaml`.
+Исправление:
+1. Изменить `spec.type: environment` → `spec.type: service`
+2. Добавить аннотацию `backstage.io/kubernetes-label-selector: idp.platform.io/team`
+3. Применить изменения в **обоих** местах: catalog entry файл + `templates/new-environment/skeleton/catalog-info.yaml`
+4. Пересобрать образ (catalog файлы embedded в Docker image)
 
 ---
 

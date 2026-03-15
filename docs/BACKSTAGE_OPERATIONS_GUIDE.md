@@ -364,7 +364,18 @@ http://localhost:7007/catalog
 
 ## 10. Как использовать Kubernetes tab / live status
 
-Важно: catalog entry окружения должна иметь `spec.type: service`. Если стоит `type: environment` или другое значение — вкладка Kubernetes не отображается в prebuilt образе Backstage.
+Для появления вкладки Kubernetes необходимо выполнить **оба** условия:
+
+**Условие 1:** `spec.type: service` в catalog entry. Типы `environment`, `website` и т.д. используют layout без Kubernetes-вкладки в prebuilt образе.
+
+**Условие 2:** аннотация `backstage.io/kubernetes-label-selector` (или `backstage.io/kubernetes-id`). Функция `isKubernetesAvailable` проверяет именно эти аннотации. Наличия `kubernetes-cluster` и `kubernetes-namespace` **недостаточно** — вкладка не появится без label-selector или id.
+
+Полный набор обязательных аннотаций:
+```yaml
+backstage.io/kubernetes-cluster: primary
+backstage.io/kubernetes-namespace: env-<team>-<env>
+backstage.io/kubernetes-label-selector: idp.platform.io/team
+```
 
 Если environment entity и annotations настроены корректно, через Backstage можно:
 - открыть entity

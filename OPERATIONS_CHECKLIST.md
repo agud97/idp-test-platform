@@ -189,12 +189,28 @@ curl -s "http://89.108.100.41:7007/api/catalog/entities?filter=kind=user,metadat
 
 Если `MISSING` — добавить User entity в `catalog/all-components.yaml` (email должен совпадать с email пользователя в Authentik).
 
-### Backstage-5b. Проверить spec.type в catalog entries
+### Backstage-5b. Проверить spec.type и kubernetes-label-selector в catalog entries
 
 ```bash
+# Проверить тип — должен быть service
 curl -s "http://89.108.100.41:7007/api/catalog/entities?filter=kind=component,spec.type=service" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d), 'service-type components')"
-# Все environment entries должны быть type=service, иначе Kubernetes-вкладка не появится
+# Все environment entries должны быть type=service
+
+# Проверить наличие kubernetes-label-selector — без него вкладка Kubernetes не появится
+curl -s "http://89.108.100.41:7007/api/catalog/entities?filter=kind=component,spec.type=service" | \
+  python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+for e in d:
+  name=e['metadata']['name']
+  ann=e['metadata'].get('annotations',{})
+  ks=ann.get('backstage.io/kubernetes-label-selector','MISSING')
+  print(name, '->', ks)
+"
+# Ожидаемо: каждый environment показывает idp.platform.io/team (не MISSING)
 ```
+
+Примечание: `isKubernetesAvailable` в prebuilt образе проверяет `kubernetes-label-selector` или `kubernetes-id`. Без этой аннотации вкладка не рендерится даже при наличии `kubernetes-cluster` и `kubernetes-namespace`.
 
 ### Backstage-5. Проверить end-to-end логин
 
