@@ -11,7 +11,7 @@ metadata:
     idp.platform.io/environment-manifest: environments/timteam/timenv.yaml
     idp.platform.io/team: timteam
 spec:
-  type: environment
+  type: service
   lifecycle: experimental
   owner: group:default/platform
   system: idp-platform

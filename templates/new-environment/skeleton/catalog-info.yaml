@@ -11,7 +11,7 @@ metadata:
     idp.platform.io/environment-manifest: environments/${{ values.team }}/${{ values.env_name }}.yaml
     idp.platform.io/team: ${{ values.team }}
 spec:
-  type: environment
+  type: service
   lifecycle: experimental
   owner: ${{ values.owner }}
   system: idp-platform
