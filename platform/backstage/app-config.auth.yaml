@@ -7,6 +7,7 @@ backstage:
       session:
         secret: ${AUTH_SESSION_SECRET}
       providers:
+        guest: null
         oidc:
           production:
             metadataUrl: http://authentik-server.authentik.svc.cluster.local/application/o/backstage/.well-known/openid-configuration
