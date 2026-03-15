@@ -8,6 +8,7 @@ metadata:
   annotations:
     backstage.io/kubernetes-cluster: primary
     backstage.io/kubernetes-namespace: env-timteam-timenv
+    backstage.io/kubernetes-label-selector: idp.platform.io/team
     idp.platform.io/environment-manifest: environments/timteam/timenv.yaml
     idp.platform.io/team: timteam
 spec:

@@ -8,6 +8,7 @@ metadata:
   annotations:
     backstage.io/kubernetes-cluster: primary
     backstage.io/kubernetes-namespace: env-platform-smoke-template-0314h
+    backstage.io/kubernetes-label-selector: idp.platform.io/team
     idp.platform.io/environment-manifest: environments/platform/smoke-template-0314h.yaml
     idp.platform.io/team: platform
 spec:

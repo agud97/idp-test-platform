@@ -8,10 +8,11 @@ metadata:
   annotations:
     backstage.io/kubernetes-cluster: primary
     backstage.io/kubernetes-namespace: env-team1-tim2
+    backstage.io/kubernetes-label-selector: idp.platform.io/team
     idp.platform.io/environment-manifest: environments/team1/tim2.yaml
     idp.platform.io/team: team1
 spec:
-  type: environment
+  type: service
   lifecycle: experimental
   owner: group:default/platform
   system: idp-platform

@@ -8,6 +8,7 @@ metadata:
   annotations:
     backstage.io/kubernetes-cluster: primary
     backstage.io/kubernetes-namespace: env-${{ values.team }}-${{ values.env_name }}
+    backstage.io/kubernetes-label-selector: idp.platform.io/team
     idp.platform.io/environment-manifest: environments/${{ values.team }}/${{ values.env_name }}.yaml
     idp.platform.io/team: ${{ values.team }}
 spec:
