@@ -21,9 +21,9 @@ backstage:
   appConfig:
     app:
       title: IDP Platform
-      baseUrl: http://backstage.idp.local:30007
+      baseUrl: http://backstage.idp.local:7007
     backend:
-      baseUrl: http://backstage.idp.local:30007
+      baseUrl: http://backstage.idp.local:7007
     techdocs:
       builder: local
       generator:
