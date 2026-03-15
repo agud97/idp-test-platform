@@ -1,0 +1,17 @@
+# Source: Backstage Scaffolder
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: timteam-timenv
+  title: timenv
+  description: IDP test environment for team timteam.
+  annotations:
+    backstage.io/kubernetes-cluster: primary
+    backstage.io/kubernetes-namespace: env-timteam-timenv
+    idp.platform.io/environment-manifest: environments/timteam/timenv.yaml
+    idp.platform.io/team: timteam
+spec:
+  type: environment
+  lifecycle: experimental
+  owner: group:default/platform
+  system: idp-platform
