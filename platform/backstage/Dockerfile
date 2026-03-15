@@ -60,11 +60,16 @@ fs.renameSync(mbFile, newMbFile);
 const mapFile = mbFile + '.map';
 if (fs.existsSync(mapFile)) fs.renameSync(mapFile, newMbFile + '.map');
 
-// 4. Update index.html to reference the renamed file
-const htmlPath = '/app/packages/app/dist/index.html';
-let html = fs.readFileSync(htmlPath, 'utf8');
+// 4. Update index.html and index.html.tmpl to reference the renamed file
 const mbBase = mbFiles[0]; // e.g. module-backstage.3be92c1c.js
-html = html.replace(new RegExp(mbBase.replace(/\./g, '\\.'), 'g'), 'module-backstage.oidcpatch.js');
-fs.writeFileSync(htmlPath, html);
-console.log('renamed to module-backstage.oidcpatch.js and updated index.html');
+const mbRe = new RegExp(mbBase.replace(/\./g, '\\.'), 'g');
+for (const htmlFile of ['/app/packages/app/dist/index.html', '/app/packages/app/dist/index.html.tmpl']) {
+  if (fs.existsSync(htmlFile)) {
+    let html = fs.readFileSync(htmlFile, 'utf8');
+    html = html.replace(mbRe, 'module-backstage.oidcpatch.js');
+    fs.writeFileSync(htmlFile, html);
+    console.log('updated', htmlFile);
+  }
+}
+console.log('renamed to module-backstage.oidcpatch.js and updated html files');
 NODE
