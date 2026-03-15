@@ -28,6 +28,8 @@ backstage:
         upgrade-insecure-requests: false
       headers:
         Strict-Transport-Security: false
+      helmet:
+        hsts: false
     techdocs:
       builder: local
       generator:
