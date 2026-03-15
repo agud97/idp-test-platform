@@ -17,17 +17,18 @@
 Добавить в `/etc/hosts`:
 
 ```
-194.58.110.23 backstage.idp.local
-194.58.110.23 authentik-server.authentik.svc.cluster.local
+89.108.100.41   backstage.idp.local
+89.108.100.218  authentik-server.authentik.svc.cluster.local
 ```
 
 Затем открыть:
 
 ```
-http://backstage.idp.local:30007
+http://backstage.idp.local:7007
 ```
 
-Backstage — NodePort `30007`, Authentik — NodePort `30009`. Публичный IP кластера — `194.58.110.23`.
+Backstage — LoadBalancer `89.108.100.41:7007`.
+Authentik — LoadBalancer `89.108.100.218:80`.
 
 Обе записи нужны: при логине браузер редиректится на Authentik для OIDC-авторизации.
 

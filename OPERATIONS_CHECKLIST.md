@@ -234,14 +234,14 @@ Namespace:
 ```bash
 kubectl get pods -n backstage
 kubectl get svc -n backstage
-# NodePort 30007 → http://backstage.idp.local:30007
-# /etc/hosts: 194.58.110.23 backstage.idp.local
+# LoadBalancer → http://backstage.idp.local:7007
+# /etc/hosts: 89.108.100.41 backstage.idp.local
 ```
 
 Для доступа из браузера добавить в `/etc/hosts`:
 ```
-194.58.110.23 backstage.idp.local
-194.58.110.23 authentik-server.authentik.svc.cluster.local
+89.108.100.41   backstage.idp.local
+89.108.100.218  authentik-server.authentik.svc.cluster.local
 ```
 
 Проверить:
