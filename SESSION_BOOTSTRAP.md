@@ -118,7 +118,14 @@ Use `kubectl` for:
 - Backstage access:
   - `http://backstage.idp.local:30007`
   - NodePort: `30007` на публичном IP `194.58.110.23`
-  - `/etc/hosts`: `194.58.110.23 backstage.idp.local`
+- Authentik access:
+  - `http://authentik-server.authentik.svc.cluster.local:30009`
+  - NodePort: `30009` на публичном IP `194.58.110.23`
+- `/etc/hosts` для браузера:
+  ```
+  194.58.110.23 backstage.idp.local
+  194.58.110.23 authentik-server.authentik.svc.cluster.local
+  ```
 - Git branch used by GitOps and scaffolder flows:
   - `feature/phase-1-foundation`
 

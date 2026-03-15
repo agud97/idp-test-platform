@@ -241,6 +241,7 @@ kubectl get svc -n backstage
 Для доступа из браузера добавить в `/etc/hosts`:
 ```
 194.58.110.23 backstage.idp.local
+194.58.110.23 authentik-server.authentik.svc.cluster.local
 ```
 
 Проверить:

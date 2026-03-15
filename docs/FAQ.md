@@ -18,6 +18,7 @@
 
 ```
 194.58.110.23 backstage.idp.local
+194.58.110.23 authentik-server.authentik.svc.cluster.local
 ```
 
 Затем открыть:
@@ -26,7 +27,9 @@
 http://backstage.idp.local:30007
 ```
 
-Backstage работает на NodePort `30007`. Публичный IP кластера — `194.58.110.23`.
+Backstage — NodePort `30007`, Authentik — NodePort `30009`. Публичный IP кластера — `194.58.110.23`.
+
+Обе записи нужны: при логине браузер редиректится на Authentik для OIDC-авторизации.
 
 ## Какой kubeconfig использовать?
 
