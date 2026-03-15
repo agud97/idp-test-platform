@@ -731,6 +731,9 @@ plan:
             and listens for postMessage from the popup (payload structure:
             {type:authorization_response, response:{backstageIdentity,profile}}).
             Replace the B loader to check /api/auth/oidc/refresh?env=production.
+            Identity object passed to onSignInSuccess MUST implement full
+            IdentityApi: getBackstageIdentity, getProfileInfo (NOT getProfile —
+            causes TypeError), getCredentials returning {token: string}, signOut.
             Rename the patched file to module-backstage.oidcpatch.js to bust
             the 2-week browser cache (Cache-Control: public, max-age=1209600).
             Patch BOTH index.html AND index.html.tmpl — the app-backend serves

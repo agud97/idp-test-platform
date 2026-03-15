@@ -274,6 +274,7 @@ The three baseline NetworkPolicies **MUST** be created by the Environment Compos
 - Patch `module-backstage.*.js` in the `Dockerfile` to replace the guest `Component` with an OIDC popup and the `B` loader with a session-check via `/api/auth/oidc/refresh?env=production`.
 - Rename the patched file (e.g., `module-backstage.oidcpatch.js`) to bust the 2-week browser cache (`Cache-Control: public, max-age=1209600`).
 - Patch **both** `/app/packages/app/dist/index.html` **and** `/app/packages/app/dist/index.html.tmpl` to reference the renamed file. The app-backend serves HTML from `index.html.tmpl` (not `index.html`) — patching only `index.html` has no effect.
+- The identity object passed to `onSignInSuccess` **MUST** implement the full `IdentityApi` interface: `getBackstageIdentity()`, `getProfileInfo()` (NOT `getProfile()`), `getCredentials()` returning `{token: string}`, and `signOut()`. Using `getProfile` instead of `getProfileInfo` causes `TypeError: this.config.identityApi.getProfileInfo is not a function` after sign-in.
 
 **MUST** seed the Backstage catalog with a `kind: User` entity for every real user who will log in, with `spec.profile.email` matching the email in Authentik. The default sign-in resolver (`emailMatchingUserEntityProfileEmail`) looks up the user in the catalog by email; if the entity is absent, sign-in fails. At minimum, the admin user `akadmin` (email `root@example.com`) **MUST** be present in `catalog/all-components.yaml`. The catalog location **MUST** include `User` in its `rules.allow` list.
 

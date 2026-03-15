@@ -321,17 +321,62 @@ oidc:
 
 ---
 
+## Шаг 7 — IdentityApi interface mismatch (getProfileInfo / getCredentials)
+
+### Проблема
+
+После успешного OIDC логина Backstage показывал:
+```
+Failed to load user identity: TypeError: this.config.identityApi.getProfileInfo is not a function
+```
+
+### Причина
+
+Backstage `IdentityApi` (из `@backstage/core-plugin-api`) требует четыре метода:
+- `getBackstageIdentity()` ✓
+- `getProfileInfo()` ✗ — у нас был `getProfile()`
+- `getCredentials()` ✗ — отсутствовал
+- `signOut()` ✓
+
+Наш патч передавал `getProfile` вместо `getProfileInfo` и не включал `getCredentials`. Backstage внутренне вызывал `identityApi.getProfileInfo()` после sign-in и получал `TypeError`.
+
+### Исправление (r9)
+
+Заменить во всех трёх местах патча (B loader + msgHandler + fallback):
+
+```js
+// было
+{ getBackstageIdentity: async () => p.backstageIdentity,
+  getProfile: async () => p.profile,
+  signOut: async () => {} }
+
+// стало
+{ getBackstageIdentity: async () => p.backstageIdentity,
+  getProfileInfo: async () => p.profile || {},
+  getCredentials: async () => ({ token: p.backstageIdentity && p.backstageIdentity.token }),
+  signOut: async () => {} }
+```
+
+```bash
+# Проверка что исправление применено
+kubectl exec deployment/backstage -n backstage -- \
+  grep -c 'getProfileInfo' /app/packages/app/dist/static/module-backstage.oidcpatch.js
+# → 3 (все три места)
+```
+
+---
+
 ## Итоговые изменения
 
 ### Файлы конфигурации
 
 | Файл | Что изменено |
 |------|-------------|
-| `platform/backstage/helm-values.yaml` | `service.type: LoadBalancer`; `backend.csp.upgrade-insecure-requests: false`; image tag до `phase-4-task-4-6-r8` |
+| `platform/backstage/helm-values.yaml` | `service.type: LoadBalancer`; `backend.csp.upgrade-insecure-requests: false`; image tag `phase-4-task-4-6-r9` |
 | `platform/backstage/app-config.auth.yaml` | `guest: null`; `app.signInPage: oidc`; `prompt: select_account`; добавлен resolver |
 | `platform/backstage/app-config.catalog.yaml` | Добавлен `User` в allowed kinds |
 | `catalog/all-components.yaml` | Добавлена User entity для `akadmin` (email `root@example.com`) |
-| `platform/backstage/Dockerfile` | Патч backend (OIDC provider module); патч frontend (guest Component → OIDC popup, B loader → OIDC refresh, rename + html patch) |
+| `platform/backstage/Dockerfile` | Патч backend (OIDC provider module); патч frontend (guest Component → OIDC popup, B loader → OIDC refresh, rename + html patch, правильный IdentityApi) |
 
 ### Docker образы
 
@@ -344,7 +389,8 @@ oidc:
 | `phase-4-task-4-6-r5` | Исправление postMessage payload (`d.response || d`) |
 | `phase-4-task-4-6-r6` | Попытка cache bust через query param в index.html — не сработало |
 | `phase-4-task-4-6-r7` | Rename + patch index.html — не сработало (app-backend игнорирует index.html) |
-| `phase-4-task-4-6-r8` | Rename + patch index.html **и** index.html.tmpl — **работает** |
+| `phase-4-task-4-6-r8` | Rename + patch index.html **и** index.html.tmpl — кэш решён |
+| `phase-4-task-4-6-r9` | **Финальный рабочий образ.** Fix IdentityApi: `getProfile` → `getProfileInfo`, добавлен `getCredentials` |
 
 ---
 
@@ -352,6 +398,5 @@ oidc:
 
 ```
 89.108.100.41   backstage.idp.local
+89.108.100.218  authentik-server.authentik.svc.cluster.local
 ```
-
-Authentik доступен напрямую по IP: `http://89.108.100.218:80`

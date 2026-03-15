@@ -51,6 +51,31 @@ kubectl exec deployment/backstage -n backstage -- \
 
 ---
 
+### Симптом: OIDC логин проходит, но Backstage показывает "Failed to load user identity: TypeError: this.config.identityApi.getProfileInfo is not a function"
+
+Вероятная причина:
+- Патч передаёт `getProfile` вместо `getProfileInfo` в объект identity
+- Отсутствует метод `getCredentials` в объекте identity
+
+Backstage `IdentityApi` требует точно: `getBackstageIdentity`, `getProfileInfo`, `getCredentials`, `signOut`.
+
+Команды:
+```bash
+# Проверить что патч содержит getProfileInfo (должно быть 3)
+kubectl exec deployment/backstage -n backstage -- \
+  grep -c 'getProfileInfo' /app/packages/app/dist/static/module-backstage.oidcpatch.js
+# Ожидаемо: 3
+
+# Проверить что getProfile (старое неверное имя) отсутствует
+kubectl exec deployment/backstage -n backstage -- \
+  grep -c '"getProfile"' /app/packages/app/dist/static/module-backstage.oidcpatch.js
+# Ожидаемо: 0
+```
+
+Исправление: пересобрать образ с исправленным патчем — заменить `getProfile` → `getProfileInfo`, добавить `getCredentials: async () => ({token: payload.backstageIdentity && payload.backstageIdentity.token})` во всех трёх местах.
+
+---
+
 ### Симптом: OIDC popup открывается и сразу закрывается (~300ms), ошибка `login_required`
 
 Вероятная причина:
