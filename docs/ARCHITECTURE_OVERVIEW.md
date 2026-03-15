@@ -149,6 +149,8 @@ Backstage даёт пользователю portal interface для:
 
 Особенность реализации:
 - Backstage в репозитории был интегрирован через prebuilt image / runtime wiring, а не через полноценный source monorepo
+- Backstage доступен по адресу `http://backstage.idp.local:30007` (NodePort 30007)
+- `/etc/hosts`: `194.58.110.23 backstage.idp.local`
 
 ## CLI Migration Layer
 

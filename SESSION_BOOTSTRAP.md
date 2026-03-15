@@ -115,8 +115,10 @@ Use `kubectl` for:
 
 - Kubeconfig path used during validation:
   - `/root/codex/kubeconfig_6144665`
-- Backstage local access during validation:
-  - `http://localhost:7007`
+- Backstage access:
+  - `http://backstage.idp.local:30007`
+  - NodePort: `30007` на публичном IP `194.58.110.23`
+  - `/etc/hosts`: `194.58.110.23 backstage.idp.local`
 - Git branch used by GitOps and scaffolder flows:
   - `feature/phase-1-foundation`
 

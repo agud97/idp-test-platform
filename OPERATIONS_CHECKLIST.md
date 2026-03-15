@@ -234,9 +234,16 @@ Namespace:
 ```bash
 kubectl get pods -n backstage
 kubectl get svc -n backstage
+# NodePort 30007 → http://backstage.idp.local:30007
+# /etc/hosts: 194.58.110.23 backstage.idp.local
 ```
 
-Если есть ingress/port-forward path, проверить:
+Для доступа из браузера добавить в `/etc/hosts`:
+```
+194.58.110.23 backstage.idp.local
+```
+
+Проверить:
 - login через OIDC
 - catalog entities
 - scaffolder template

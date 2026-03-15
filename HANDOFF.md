@@ -41,6 +41,8 @@ kubectl get xrd,composition
 ```bash
 kubectl get pods -n backstage
 kubectl get svc -n backstage
+# Backstage доступен на http://backstage.idp.local:30007
+# /etc/hosts: 194.58.110.23 backstage.idp.local
 ```
 
 5. Прогнать минимальный smoke:

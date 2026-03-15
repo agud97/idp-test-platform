@@ -12,6 +12,22 @@
 - [OPERATIONS_CHECKLIST.md](../OPERATIONS_CHECKLIST.md)
 - [HANDOFF.md](../HANDOFF.md)
 
+## Как попасть в Backstage из браузера?
+
+Добавить в `/etc/hosts`:
+
+```
+194.58.110.23 backstage.idp.local
+```
+
+Затем открыть:
+
+```
+http://backstage.idp.local:30007
+```
+
+Backstage работает на NodePort `30007`. Публичный IP кластера — `194.58.110.23`.
+
 ## Какой kubeconfig использовать?
 
 Использовать:
