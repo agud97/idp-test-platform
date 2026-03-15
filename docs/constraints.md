@@ -291,6 +291,20 @@ The backend plugin **MUST** be implemented as a Backstage backend plugin at `pac
 
 **MUST** use `spec.type: service` (not `environment`) for all environment catalog entries. In the prebuilt Backstage image, the Kubernetes tab is only rendered for `spec.type: service` entities. Other types fall into a default layout with no Kubernetes tab. This means the scaffolder template skeleton (`templates/new-environment/skeleton/catalog-info.yaml`) and all catalog entries under `catalog/environments/` MUST use `type: service`.
 
+### 3.3.1 Known Limitation: Dockerfile JS Patching is Technical Debt
+
+The OIDC sign-in currently works via **direct patching of compiled JavaScript in the Dockerfile** (`module-backstage.*.js`). This is a PoC-acceptable workaround with the following known risks:
+
+| Risk | Impact |
+|------|--------|
+| Patch is tied to specific rspack bundle internals (variable names `B`, `Component`) — these can change on any Backstage version bump | Patch may silently break on Backstage update |
+| `IdentityApi` is emulated manually — interface changes in future Backstage versions require manual patch updates | Regression risk on upgrades |
+| `app.signInPage: oidc` in app-config has **no effect** in the prebuilt image | Behavior diverges from official Backstage documentation |
+
+**Long-term correct approach:** Build Backstage from source (`npx @backstage/create-app`, configure `OIDCSignInPage` in `packages/app/src/App.tsx`, run `yarn build`). In a source build, `app.signInPage: oidc` works natively via runtime app-config injection, and the `IdentityApi` is provided by `@backstage/plugin-auth-react` without custom patching.
+
+The current Dockerfile patch approach **SHOULD NOT** be used in a production-grade deployment. Migration to a source build is recommended before promoting this platform beyond PoC/demo scope.
+
 ### 3.4 Crossplane Provider
 
 **MUST** use `provider-kubernetes` (crossplane-contrib) for creating in-cluster Kubernetes resources (Deployments, Services, ConfigMaps, Secrets) from Compositions.

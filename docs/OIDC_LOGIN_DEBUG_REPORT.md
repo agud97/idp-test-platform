@@ -400,3 +400,46 @@ kubectl exec deployment/backstage -n backstage -- \
 89.108.100.41   backstage.idp.local
 89.108.100.218  authentik-server.authentik.svc.cluster.local
 ```
+
+---
+
+## Известные ограничения и технический долг
+
+### Текущий подход: патчинг Dockerfile — технический долг
+
+Весь OIDC-логин реализован через **прямой патч скомпилированного JS** в `Dockerfile`. Это работает, но имеет принципиальные недостатки:
+
+| Проблема | Последствие |
+|----------|-------------|
+| Патч привязан к конкретному rspack bundle — внутренние имена переменных (`B`, `Component`) могут измениться при обновлении Backstage | При обновлении образа патч может сломаться без очевидного сообщения об ошибке |
+| Патч эмулирует `IdentityApi` вручную — при изменении интерфейса в новых версиях Backstage потребуется ручное обновление | Риск регрессий при обновлении |
+| `app.signInPage: oidc` в app-config **не работает** в prebuilt образе — Backstage не читает эту конфигурацию во frontend | Поведение расходится с документацией Backstage |
+
+### Правильный долгосрочный подход: сборка из исходников
+
+Правильный способ настроить OIDC в Backstage — собрать образ из исходников:
+
+```bash
+# 1. Создать Backstage приложение
+npx @backstage/create-app@latest
+
+# 2. Настроить OIDC в packages/app/src/App.tsx
+# Добавить OIDCSignInPage как signInComponent
+
+# 3. Настроить app-config.yaml
+# app.signInPage: oidc  ← работает при нативной сборке
+
+# 4. Собрать образ
+yarn build
+docker build -f packages/backend/Dockerfile .
+```
+
+При нативной сборке:
+- `app.signInPage: oidc` работает через runtime app-config injection
+- `IdentityApi` формируется официальным `@backstage/plugin-auth-react`
+- Обновления Backstage применяются через `yarn backstage-cli versions:bump`
+- Не нужен патч Dockerfile
+
+### Когда это важно
+
+Текущий патч-подход **приемлем для демо/PoC**. Если платформа идёт в production — нужна миграция на source build. Это исключит все 9 итераций (r1–r9) с отладкой JS-патча и сделает обновления Backstage предсказуемыми.
