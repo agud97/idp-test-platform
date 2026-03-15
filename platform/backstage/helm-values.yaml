@@ -32,8 +32,6 @@ backstage:
         type: local
 
 service:
-  type: NodePort
+  type: LoadBalancer
   ports:
     backend: 7007
-  nodePorts:
-    backend: 30007

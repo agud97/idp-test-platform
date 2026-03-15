@@ -1,9 +1,6 @@
 server:
   service:
-    type: NodePort
-    servicePortHttp: 30009
-    nodePorts:
-      http: 30009
+    type: LoadBalancer
 
 authentik:
   secret_key: change-me

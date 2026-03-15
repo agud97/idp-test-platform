@@ -9,7 +9,7 @@ backstage:
       providers:
         oidc:
           production:
-            metadataUrl: http://authentik-server.authentik.svc.cluster.local:30009/application/o/backstage/.well-known/openid-configuration
+            metadataUrl: http://authentik-server.authentik.svc.cluster.local/application/o/backstage/.well-known/openid-configuration
             clientId: backstage
             clientSecret: ${OAUTH_CLIENT_SECRET}
             prompt: login
