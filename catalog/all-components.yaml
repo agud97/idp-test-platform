@@ -33,6 +33,17 @@ spec:
   children: []
 ---
 apiVersion: backstage.io/v1alpha1
+kind: User
+metadata:
+  name: akadmin
+spec:
+  profile:
+    displayName: Admin
+    email: root@example.com
+  memberOf:
+    - platform
+---
+apiVersion: backstage.io/v1alpha1
 kind: Location
 metadata:
   name: new-environment-template
