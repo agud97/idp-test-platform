@@ -24,6 +24,10 @@ backstage:
       baseUrl: http://backstage.idp.local:7007
     backend:
       baseUrl: http://backstage.idp.local:7007
+      csp:
+        upgrade-insecure-requests: false
+      headers:
+        Strict-Transport-Security: false
     techdocs:
       builder: local
       generator:
