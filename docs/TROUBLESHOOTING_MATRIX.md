@@ -19,6 +19,86 @@
 
 ## Matrix
 
+### Симптом: Backstage показывает "Enter as a Guest User" вместо OIDC
+
+Вероятные причины:
+- `guest.Component` в prebuilt образе не заменён OIDC-патчем
+- браузер отдаёт старый `module-backstage.*.js` из кэша (max-age 2 недели)
+- `index.html.tmpl` не патчен — Backstage сервирует шаблон, а не `index.html`
+
+Куда смотреть:
+- HTML из которого браузер загружает страницу
+- имя файла `module-backstage.*.js` в HTML
+- `Cache-Control` заголовок на JS-файле
+
+Команды:
+```bash
+# Проверить, что сервер отдаёт правильный JS-файл
+curl -s http://89.108.100.41:7007 | grep 'module-backstage'
+# Ожидаемо: module-backstage.oidcpatch.js
+
+# Проверить, что патч применён
+kubectl exec deployment/backstage -n backstage -- \
+  grep -c 'oidc/refresh' /app/packages/app/dist/static/module-backstage.oidcpatch.js
+# Ожидаемо: 1
+
+# Проверить что index.html.tmpl указывает на патченый файл
+kubectl exec deployment/backstage -n backstage -- \
+  grep 'module-backstage' /app/packages/app/dist/index.html.tmpl
+```
+
+Важно: `index.html` в этом образе **не используется** — app-backend регенерирует HTML из `index.html.tmpl` при каждом запросе. Патчить нужно именно `index.html.tmpl`.
+
+---
+
+### Симптом: OIDC popup открывается и сразу закрывается (~300ms), ошибка `login_required`
+
+Вероятная причина:
+- Backstage отправляет `prompt=none` по умолчанию
+- Authentik возвращает `login_required` немедленно, если у пользователя нет активной сессии
+
+Команды:
+```bash
+# Проверить какой prompt идёт в запросе к Authentik
+curl -sv "http://89.108.100.41:7007/api/auth/oidc/start?env=production" 2>&1 | grep Location
+# Если в Location видно &prompt=none& → проблема подтверждена
+
+kubectl logs -n backstage deployment/backstage --tail=20
+# Ищем: handler/frame?error=login_required
+```
+
+Исправление: добавить `prompt: select_account` в `platform/backstage/app-config.auth.yaml`:
+```yaml
+oidc:
+  production:
+    prompt: select_account
+```
+
+Не использовать `prompt: login` — вызывает бесконечный цикл переаутентификации в Authentik.
+
+---
+
+### Симптом: OIDC popup проходит, но пользователь не попадает в Backstage, ошибка "could not find user entity"
+
+Вероятные причины:
+- User entity для пользователя отсутствует в Backstage catalog
+- Resolver `emailMatchingUserEntityProfileEmail` не может найти User по email из OIDC токена
+- `User` kind не разрешён в catalog location rules
+
+Команды:
+```bash
+kubectl logs -n backstage deployment/backstage --tail=30 | grep -i 'resolver\|sign.in\|email\|user entity'
+
+# Проверить, что User entity есть в catalog
+curl -s "http://89.108.100.41:7007/api/catalog/entities?filter=kind=user" | python3 -m json.tool | grep -A5 '"name"'
+```
+
+Исправление:
+1. Добавить User entity в `catalog/all-components.yaml` (email должен совпадать с email в Authentik)
+2. Добавить `User` в allowed kinds в `platform/backstage/app-config.catalog.yaml`
+
+---
+
 ### Симптом: `kubectl` зависает или даёт `context deadline exceeded`
 
 Вероятные причины:

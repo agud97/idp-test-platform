@@ -30,7 +30,27 @@ http://backstage.idp.local:7007
 Backstage — LoadBalancer `89.108.100.41:7007`.
 Authentik — LoadBalancer `89.108.100.218:80`.
 
-Обе записи нужны: при логине браузер редиректится на Authentik для OIDC-авторизации.
+Обе записи нужны: Backstage получает OIDC-метаданные с internal DNS-имени Authentik, поэтому redirect на логин идёт на `authentik-server.authentik.svc.cluster.local` — браузер должен уметь его резолвить.
+
+## Какой логин и пароль для Backstage?
+
+Нажать **"Sign in with OIDC"** на главной странице. Откроется popup Authentik:
+
+- Логин: `akadmin`
+- Пароль: `Admin1234!`
+
+## Почему появляется "Enter as a Guest User" вместо OIDC?
+
+Скорее всего браузер отдаёт старый JS из кэша (max-age 2 недели). Открыть в режиме инкогнито или очистить кэш.
+
+Если проблема сохраняется — проверить, что образ Backstage собран с патчем:
+
+```bash
+curl -s http://89.108.100.41:7007 | grep 'module-backstage'
+# Должно быть: module-backstage.oidcpatch.js
+```
+
+Подробнее: [OIDC_LOGIN_DEBUG_REPORT.md](OIDC_LOGIN_DEBUG_REPORT.md), [TROUBLESHOOTING_MATRIX.md](TROUBLESHOOTING_MATRIX.md)
 
 ## Какой kubeconfig использовать?
 

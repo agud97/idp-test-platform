@@ -139,6 +139,69 @@ kubectl get xenvironment -n crossplane-system -o wide
 - `.spec.resourceRef.name`
 - ошибки reconcile/message
 
+## Backstage OIDC — первый деплой / повторный деплой
+
+При первом деплое или пересборке образа Backstage нужно проверить следующие пункты:
+
+### Backstage-0. Проверить сервис
+
+```bash
+kubectl get svc -n backstage
+# Ожидаемо: type=LoadBalancer, EXTERNAL-IP=89.108.100.41, PORT=7007
+```
+
+### Backstage-1. Проверить, что патченый JS сервируется
+
+```bash
+curl -s http://89.108.100.41:7007 | grep 'module-backstage'
+# Ожидаемо: module-backstage.oidcpatch.js
+```
+
+Если видно `module-backstage.3be92c1c.js` (или другой hash) — патч Dockerfile не применён или ArgoCD синхронизировал старый образ.
+
+### Backstage-2. Проверить, что patch применён к JS
+
+```bash
+kubectl exec deployment/backstage -n backstage -- \
+  grep -c 'oidc/refresh' /app/packages/app/dist/static/module-backstage.oidcpatch.js
+# Ожидаемо: 1
+
+kubectl exec deployment/backstage -n backstage -- \
+  grep -c 'enableLegacyGuestToken' /app/packages/app/dist/static/module-backstage.oidcpatch.js
+# Ожидаемо: 0
+```
+
+### Backstage-3. Проверить OIDC start redirect содержит нужный prompt
+
+```bash
+curl -sv "http://89.108.100.41:7007/api/auth/oidc/start?env=production" 2>&1 | grep -o 'prompt=[^&]*'
+# Ожидаемо: prompt=select_account
+# НЕ должно быть: prompt=none (users will get login_required), prompt=login (infinite loop)
+```
+
+### Backstage-4. Проверить User entity в catalog
+
+```bash
+curl -s "http://89.108.100.41:7007/api/catalog/entities?filter=kind=user,metadata.name=akadmin" | \
+  python3 -c "import sys,json; d=json.load(sys.stdin); print('OK' if d else 'MISSING')"
+# Ожидаемо: OK
+```
+
+Если `MISSING` — добавить User entity в `catalog/all-components.yaml` (email должен совпадать с email пользователя в Authentik).
+
+### Backstage-5. Проверить end-to-end логин
+
+Открыть `http://backstage.idp.local:7007` в браузере (с `/etc/hosts` `89.108.100.41 backstage.idp.local` и `89.108.100.218 authentik-server.authentik.svc.cluster.local`), нажать "Sign in with OIDC", залогиниться как `akadmin` / `Admin1234!`.
+
+**Критичные настройки /etc/hosts в Backstage при повторном развёртывании:**
+
+| Запись | IP | Назначение |
+|--------|-----|-----------|
+| `backstage.idp.local` | `89.108.100.41` | Backstage portal |
+| `authentik-server.authentik.svc.cluster.local` | `89.108.100.218` | Authentik OIDC (браузер редиректится на internal DNS-имя) |
+
+---
+
 ## Проверка конкретного Environment
 
 Ниже шаблон для диагностики одного environment.

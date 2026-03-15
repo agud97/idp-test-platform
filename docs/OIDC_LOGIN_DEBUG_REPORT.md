@@ -2,16 +2,16 @@
 
 **Дата:** 2026-03-15
 **Цель:** Настроить вход в Backstage через OIDC (Authentik) из браузера пользователя
+**Итог:** **РЕШЕНО** — полный OIDC логин работает. Логин `akadmin` / `Admin1234!`.
 
 ---
 
-## Итоговое состояние на момент отчёта
+## Итоговое состояние
 
 - Backstage доступен по `http://backstage.idp.local:7007` (LoadBalancer `89.108.100.41:7007`)
-- Authentik доступен по `http://authentik-server.authentik.svc.cluster.local` (LoadBalancer `89.108.100.218:80`)
-- OIDC backend работает: `/api/auth/oidc/start?env=production` → 302 → Authentik
-- Пользователь успешно логинится на Authentik (`akadmin` / `Admin1234!`)
-- **Проблема не решена:** после успешного логина пользователь не попадает внутрь Backstage
+- Authentik доступен по `http://89.108.100.218:80`
+- OIDC логин полностью работает: кнопка "Sign in with OIDC" → popup Authentik → ввод логина/пароля → redirect обратно → Backstage открывается
+- Учётные данные: `akadmin` / `Admin1234!`
 
 ---
 
@@ -19,22 +19,18 @@
 
 ### Проблема
 
-Backstage и Authentik изначально были задеплоены без публичного доступа. Backstage имел тип сервиса по умолчанию (ClusterIP). Authentik — аналогично.
+Backstage и Authentik изначально задеплоены без публичного доступа (ClusterIP).
 
-### Что делал
-
-Изначально выбрал **NodePort** (ошибочно), полагая что OpenStack-ноды с внутренними IP `192.168.2.x` не поддерживают LoadBalancer.
+### Диагностика
 
 ```bash
 kubectl get nodes -o jsonpath='{.items[*].spec.providerID}'
 # → openstack:///xxxxxxxx-xxxx-...
 ```
 
-Обнаружил `providerID: openstack:///...` — значит Cloud Controller Manager присутствует и LoadBalancer поддерживается.
+`providerID: openstack://` → Cloud Controller Manager присутствует → LoadBalancer поддерживается.
 
 ### Исправление
-
-Переключил оба сервиса на `type: LoadBalancer` в Helm values:
 
 ```yaml
 # platform/backstage/helm-values.yaml
@@ -55,44 +51,31 @@ git commit -m "Switch Backstage and Authentik services to LoadBalancer"
 git push origin feature/phase-1-foundation
 ```
 
-Получили LoadBalancer IP:
-```bash
-kubectl get svc -n backstage
-# → 89.108.100.41:7007
-
-kubectl get svc -n authentik
-# → 89.108.100.218:80
+Результат:
 ```
-
-Проверка:
-```bash
-curl -o /dev/null -w "%{http_code}" http://89.108.100.41:7007
-# → 200
-
-curl -o /dev/null -w "%{http_code}" http://89.108.100.218:80
-# → 302
+kubectl get svc -n backstage  → 89.108.100.41:7007
+kubectl get svc -n authentik  → 89.108.100.218:80
 ```
 
 ---
 
-## Шаг 2 — HTTPS upgrade в браузере
+## Шаг 2 — HTTPS upgrade-insecure-requests
 
 ### Проблема
 
-Браузер редиректил все запросы на `https://backstage.idp.local:7007/static/...` вместо HTTP. В консоли браузера:
-
+Браузер редиректил все запросы на HTTPS:
 ```
 Failed to load resource: https://backstage.idp.local:7007/static/runtime.230b72e0.js
 ```
 
 ### Причина
 
-В Backstage backend включён CSP-заголовок `upgrade-insecure-requests`, который заставляет браузер апгрейдить все HTTP ресурсы до HTTPS.
+CSP-заголовок `upgrade-insecure-requests` в Backstage backend заставлял браузер апгрейдить все HTTP-ресурсы до HTTPS.
 
 ### Исправление
 
 ```yaml
-# platform/backstage/helm-values.yaml → appConfig
+# platform/backstage/helm-values.yaml → appConfig → backend
 backend:
   csp:
     upgrade-insecure-requests: false
@@ -102,111 +85,43 @@ backend:
     hsts: false
 ```
 
-```bash
-git add platform/backstage/helm-values.yaml
-git commit -m "Disable CSP upgrade-insecure-requests and HSTS"
-git push origin feature/phase-1-foundation
-```
-
-**Примечание:** `Strict-Transport-Security` и `helmet.hsts: false` — не сработали (захардкожены в prebuilt image). Но HSTS по HTTP браузерами игнорируется (RFC 6797), поэтому практически не мешает.
+**Примечание:** `Strict-Transport-Security` и `helmet.hsts` захардкожены в prebuilt image и не меняются через app-config. Но HSTS по HTTP браузерами игнорируется (RFC 6797), поэтому на практике не мешает.
 
 ---
 
-## Шаг 3 — "Enter as a Guest User" вместо OIDC
+## Шаг 3 — Guest вместо OIDC на странице входа
 
 ### Проблема
 
-После открытия `http://backstage.idp.local:7007` в браузере отображалась только кнопка:
-> _"Enter as a Guest User. You will not have a verified identity, meaning some features might be unavailable."_
-
-OIDC sign-in не появлялся.
-
-### Диагностика
-
-Проверили ConfigMap:
-```bash
-kubectl get configmap -n backstage backstage-app-config -o jsonpath='{.data.app-config\.yaml}' | grep -A10 'auth:'
-```
-
-ConfigMap содержал корректный `signInPage: oidc` и `auth.providers.oidc`, но:
-
-1. В base image `/app/app-config.yaml` есть `auth.providers.guest: {}` — он мёржится поверх
-2. `signInPage` находился на корневом уровне, а не под `app:`
-
-### Исправление 1 — отключить guest провайдер
-
-```yaml
-# platform/backstage/app-config.auth.yaml
-auth:
-  providers:
-    guest: null   # ← отключить guest из base image
-    oidc: ...
-```
-
-### Исправление 2 — перенести signInPage под app:
-
-```yaml
-app:
-  signInPage: oidc   # ← было на корневом уровне, не читалось фронтендом
-```
-
-```bash
-git add platform/backstage/app-config.auth.yaml
-git commit -m "Disable guest provider and move signInPage under app key"
-git push origin feature/phase-1-foundation
-
-kubectl annotate application backstage -n argocd argocd.argoproj.io/refresh=hard
-kubectl rollout restart deployment/backstage -n backstage
-kubectl rollout status deployment/backstage -n backstage --timeout=90s
-```
-
-**Результат:** `guest: null` появился в ConfigMap, но в HTML фронтенда `signInPage` по-прежнему отсутствовал. Кнопка Guest осталась.
+После открытия `http://backstage.idp.local:7007` — только кнопка "Enter as a Guest User". OIDC не отображается.
 
 ### Причина
 
-Фронтенд prebuilt image скомпилирован с захардкоженным:
+Фронтенд Backstage 1.48.0 (prebuilt image, rspack bundler) скомпилирован с захардкоженным:
 ```js
-// packages/app/dist/static/main.95f13c68.js
-SignInPage:e=>(0,s.jsx)(eO.q4,{...e,auto:!0,providers:["guest"]})
+// packages/app/dist/static/main.*.js
+SignInPage: e => (0,s.jsx)(eO.q4, {...e, auto:!0, providers:["guest"]})
 ```
 
-Ни `app.signInPage`, ни `auth.providers.guest: null` не влияют на скомпилированный JS. Backstage 1.48.0 в этом образе не поддерживает конфигурацию sign-in page через app-config.
+Ни `app.signInPage: oidc`, ни `auth.providers.guest: null` не влияют на скомпилированный JS. Стандартная конфигурация sign-in page через app-config не работает в этом образе.
 
----
+Дополнительно: в base image `app-config.yaml` есть `auth.providers.guest: {}` — он мёржится поверх. `signInPage` было указано на корневом уровне YAML вместо `app.signInPage`.
 
-## Шаг 4 — Попытка патча скомпилированного main.js
-
-### Идея
-
-Заменить `providers:["guest"]` на `providers:["oidc"]` прямо в скомпилированном JS через патч в Dockerfile.
-
-### Реализация
+### Попытка 1 (r2) — patch providers:["oidc"]
 
 ```dockerfile
-# platform/backstage/Dockerfile
 RUN node - <<'NODE'
 const fs = require('fs');
 const dir = '/app/packages/app/dist/static';
-const files = fs.readdirSync(dir).filter(f => f.startsWith('main.') && f.endsWith('.js') && !f.endsWith('.map'));
+const files = fs.readdirSync(dir).filter(f => f.startsWith('main.') && f.endsWith('.js'));
 const file = dir + '/' + files[0];
 const src = fs.readFileSync(file, 'utf8');
 fs.writeFileSync(file, src.replace('auto:!0,providers:["guest"]', 'auto:!0,providers:["oidc"]'));
 NODE
 ```
 
-```bash
-docker build -f platform/backstage/Dockerfile \
-  -t ghcr.io/agud97/idp-test-platform/backstage-oidc:phase-4-task-4-6-r2 .
-docker push ghcr.io/agud97/idp-test-platform/backstage-oidc:phase-4-task-4-6-r2
-# Обновили helm-values.yaml tag → r2, запушили
-```
-
-### Результат
-
-**Белый экран.** Строка `"oidc"` не является валидным провайдером в карте `J`:
-
+**Результат: белый экран.** В `module-backstage.*.js` есть карта провайдеров `J`:
 ```js
-// module-backstage.3be92c1c.js
 J = {
   guest:  { Component: ..., loader: B },
   custom: { Component: ..., loader: V },
@@ -214,193 +129,229 @@ J = {
   // "oidc" — не существует
 }
 ```
+При обращении к `J["oidc"].Component` — TypeError → React crash → белый экран.
 
-При попытке `J["oidc"].Component` → `TypeError`, React крашился → белый экран.
+### Решение — патч guest Component с popup + postMessage
 
----
-
-## Шаг 5 — Исследование внутренней структуры фронтенда
-
-### Диагностика
-
-Изучили скомпилированный `module-backstage.3be92c1c.js`:
+Изучена внутренняя структура `module-backstage.*.js`:
 
 ```bash
 kubectl exec -n backstage deployment/backstage -- node -e "
 const fs = require('fs');
 const src = fs.readFileSync('/app/packages/app/dist/static/module-backstage.3be92c1c.js', 'utf8');
-// Найти определение функции ee (экспортируется как q4)
-const idx = src.indexOf('function ee(');
-console.log(src.slice(idx, idx+200));
-"
-# → function ee(e){return "provider" in e?(0,i.jsx)(X,{...e}):(0,i.jsx)(Z,{...e})}
-```
-
-**Архитектура:**
-- `q4` → `ee(props)`: если `provider` (ед.ч.) в props → рендерит `X` (single provider), иначе → `Z` (multi-provider)
-- `Z` принимает `providers: string[]`, ищет каждую строку в `J`
-- `X` принимает `provider: {apiRef, title, message}`, вызывает `useApi(provider.apiRef)`
-
-```bash
-# Найти B loader (авто-вход)
-kubectl exec -n backstage deployment/backstage -- node -e "
-const fs = require('fs');
-const src = fs.readFileSync('/app/packages/app/dist/static/module-backstage.3be92c1c.js', 'utf8');
+// Структура карты провайдеров J
 const idx = src.indexOf(',B=async');
 console.log(src.slice(idx, idx+400));
 "
-# → B=async e=>{ ... new P({provider:'guest',...}).getBackstageIdentity() ... }
 ```
 
-**Вывод:** OIDC ApiRef не зарегистрирован в скомпилированном фронтенде. `@backstage/core-app-api` OAuth2 класс и `oidcAuthApiRef` отсутствуют в бандле. Невозможно использовать стандартный Backstage OIDC flow через `X` или `Z` без пересборки из исходников.
+- `B` = loader: автоматически пробует войти (изначально — как guest)
+- `guest.Component` = UI компонент кнопки входа
 
----
-
-## Шаг 6 — Патч guest Component с popup + postMessage
-
-### Идея
-
-Заменить логику `guest` Component в `module-backstage.3be92c1c.js`:
-- Открывать popup на `/api/auth/oidc/start?env=production`
-- Слушать `window.postMessage` от popup (Backstage backend отправляет его через `sendWebMessageResponse`)
-- Вызывать `onSignInSuccess` с данными из сообщения
-
-Изучили `sendWebMessageResponse`:
+Изучен `sendWebMessageResponse`:
 ```bash
 kubectl exec -n backstage deployment/backstage -- \
   cat /app/node_modules/@backstage/plugin-auth-node/dist/flow/sendWebMessageResponse.cjs.js
 ```
 
-Нашли точный формат:
-```js
-// popup отправляет два сообщения:
-(window.opener).postMessage({'type': 'config_info', 'targetOrigin': origin}, '*');
-(window.opener).postMessage(JSON.parse(authResponse), origin);
-// authResponse содержит: { backstageIdentity, profile, providerInfo }
+Popup отправляет два сообщения родительскому окну:
+1. `{type: 'config_info', targetOrigin: origin}` — игнорировать
+2. `{type: 'authorization_response', response: {backstageIdentity, profile, providerInfo}}` — данные идентичности
+
+**Исправление:** заменить `guest.Component` на компонент, открывающий OIDC popup, а `B` loader — на проверку сессии через `/api/auth/oidc/refresh`.
+
+---
+
+## Шаг 4 — Кэш браузера (проблема r3/r4 → r8)
+
+### Проблема
+
+Даже после пуша нового Docker-образа с патчем браузер продолжал отдавать старый `module-backstage.3be92c1c.js`. Backstage отдаёт статические JS-файлы с:
+```
+Cache-Control: public, max-age=1209600   # 2 недели
 ```
 
-### Реализация (r3 → r4)
+Имя файла содержит content-hash (`3be92c1c`), но при патче в Dockerfile содержимое изменялось без смены хэша в имени → браузер считал файл неизменным и брал из кэша.
+
+### Попытка r6 — query param `?v=r6` в index.html
+
+Добавить `?v=r6` к URL скрипта в `index.html`:
+```js
+html = html.replace(mbBase, mbBase + '?v=r6');
+```
+
+**Не сработало:** Backstage app-backend не сервирует `index.html` напрямую. Он обрабатывает `index.html.tmpl` — шаблон, в который инжектируется конфиг — и генерирует ответ заново на каждый запрос. Изменения в `index.html` игнорируются.
+
+### Попытка r7 — rename + patch index.html
+
+Переименовать файл в `module-backstage.oidcpatch.js` и патчить `index.html`.
+
+**Не сработало:** по той же причине — app-backend использует `index.html.tmpl`, а не `index.html`.
+
+### Исправление r8 — rename + patch ОБОИХ файлов
 
 ```dockerfile
-# platform/backstage/Dockerfile — патч module-backstage.js
-# 1. Заменить B loader: сначала пробовать OIDC refresh
-const bTo = ',B=async e=>{try{const res=await fetch("/api/auth/oidc/refresh?env=production",{headers:{"X-Requested-With":"XMLHttpRequest"},credentials:"include"});if(res.ok){const d=await res.json();if(d&&d.backstageIdentity)return{getBackstageIdentity:async()=>d.backstageIdentity,getProfile:async()=>d.profile,signOut:async()=>{}};}}catch(err){}};';
+# В Dockerfile — патч module-backstage.js, затем:
 
-# 2. Заменить guest Component: popup + postMessage listener
-const gTo = 'guest:{Component:({onSignInStarted:e,onSignInSuccess:t,onSignInFailure:r})=>{
-  const u=()=>{
-    e();
-    const p=window.open("/api/auth/oidc/start?env=production","_oidcLogin","width=600,height=700");
-    if(!p){r();return;}
-    let done=false;
-    const cleanup=()=>{done=true;window.removeEventListener("message",msgHandler);clearInterval(tm);};
-    const msgHandler=(ev)=>{
-      if(done)return;
-      const d=ev.data;
-      if(d&&d.type==="config_info")return;  // игнорируем первое сообщение
-      if(d&&(d.backstageIdentity||d.profile)){
-        cleanup();
-        t({getBackstageIdentity:async()=>d.backstageIdentity,getProfile:async()=>d.profile||{},signOut:async()=>{}});
-      }else if(d&&d.error){cleanup();r();}
-    };
-    window.addEventListener("message",msgHandler);
-    const tm=setInterval(async()=>{
-      if(p.closed&&!done){  // fallback: popup закрыт без сообщения
-        cleanup();
-        // попытка через refresh endpoint
-        ...
-        r();
-      }
-    },500);
-  };
-  ...
-},loader:B}';
+# 3. Rename patched file to bust browser cache
+const newMbFile = dir + '/module-backstage.oidcpatch.js';
+fs.renameSync(mbFile, newMbFile);
+const mapFile = mbFile + '.map';
+if (fs.existsSync(mapFile)) fs.renameSync(mapFile, newMbFile + '.map');
+
+# 4. Patch BOTH index.html AND index.html.tmpl
+const mbBase = mbFiles[0]; // e.g. module-backstage.3be92c1c.js
+const mbRe = new RegExp(mbBase.replace(/\./g, '\\.'), 'g');
+for (const htmlFile of ['/app/packages/app/dist/index.html', '/app/packages/app/dist/index.html.tmpl']) {
+  if (fs.existsSync(htmlFile)) {
+    let html = fs.readFileSync(htmlFile, 'utf8');
+    html = html.replace(mbRe, 'module-backstage.oidcpatch.js');
+    fs.writeFileSync(htmlFile, html);
+  }
+}
 ```
 
+**Сработало:** сервер начал отдавать `module-backstage.oidcpatch.js` в HTML — новое имя файла, кэш не попадает.
+
+Проверка:
 ```bash
-docker build -f platform/backstage/Dockerfile \
-  -t ghcr.io/agud97/idp-test-platform/backstage-oidc:phase-4-task-4-6-r4 .
-docker push ghcr.io/agud97/idp-test-platform/backstage-oidc:phase-4-task-4-6-r4
-# tag → r4, commit, push
-kubectl annotate application backstage -n argocd argocd.argoproj.io/refresh=hard
+curl -s http://89.108.100.41:7007 | grep 'module-backstage'
+# → module-backstage.oidcpatch.js
+
+kubectl exec deployment/backstage -n backstage -- \
+  grep -c 'oidc/refresh' /app/packages/app/dist/static/module-backstage.oidcpatch.js
+# → 1 (патч применён)
+
+kubectl exec deployment/backstage -n backstage -- \
+  grep -c 'enableLegacyGuestToken' /app/packages/app/dist/static/module-backstage.oidcpatch.js
+# → 0 (старый guest код удалён)
 ```
-
-### Результат
-
-Пользователь успешно проходит аутентификацию на Authentik (логин `akadmin` / `Admin1234!`), popup закрывается, но **внутрь Backstage не попадает**.
 
 ---
 
-## Текущая диагностика (на момент отчёта)
+## Шаг 5 — Resolver emailMatchingUserEntityProfileEmail
 
-Из логов Backstage после успешного OIDC логина:
+### Проблема
 
+После успешного OIDC логина на Authentik Backstage возвращал ошибку. Из логов:
 ```
-GET /api/auth/guest/refresh → 404   (старый код ещё в браузере?)
-GET /api/catalog/entities?filter=...user:default/guest → 401
-POST /api/permission/authorize → 401
+Error: Failed to sign in as user: could not find user entity with email root@example.com
 ```
 
-**Наблюдения:**
+### Причина
 
-1. `/api/auth/guest/refresh` вызывается — это либо старый кэшированный JS в браузере, либо `r4` ещё не применён
-2. Фронтенд пытается работать с identity `user:default/guest` — что означает либо:
-   - `onSignInSuccess` вызван с невалидным identity (нет JWT token)
-   - Resolver `emailMatchingUserEntityProfileEmail` упал: пользователь `akadmin` (email `root@example.com`) не найден в Backstage catalog
-3. Все API-запросы возвращают 401 — токен не проходит валидацию
+`signIn.resolvers[0].resolver: emailMatchingUserEntityProfileEmail` ищет User entity в каталоге Backstage по email. Пользователь `akadmin` в Authentik имеет email `root@example.com`. В каталоге не было соответствующей User entity.
+
+### Исправление
+
+```yaml
+# catalog/all-components.yaml — добавить User entity
+apiVersion: backstage.io/v1alpha1
+kind: User
+metadata:
+  name: akadmin
+spec:
+  profile:
+    displayName: Admin
+    email: root@example.com
+  memberOf:
+    - platform
+```
+
+```yaml
+# platform/backstage/app-config.catalog.yaml — разрешить User kind
+catalog:
+  locations:
+    - type: file
+      target: /app/catalog/all-components.yaml
+      rules:
+        - allow:
+            - Component
+            - System
+            - Group
+            - User   # ← добавлено
+```
 
 ---
 
-## Корневые причины (гипотезы)
+## Шаг 6 — prompt=none → login_required
 
-### Гипотеза A — Resolver failure
+### Проблема
 
-`signIn.resolvers[0].resolver: emailMatchingUserEntityProfileEmail` — ищет User entity в catalog по email. У `akadmin` email `root@example.com`. В catalog нет соответствующей User entity → resolver возвращает ошибку → `backstageIdentity` в postMessage содержит error вместо данных.
+После всех предыдущих исправлений popup открывался и почти сразу закрывался (~300ms). Из логов:
+```
+2026-03-15T16:32:40.927Z [302] /api/auth/oidc/start?env=production
+2026-03-15T16:32:41.310Z [200] /api/auth/oidc/handler/frame?error=login_required&...
+```
 
-**Проверка:**
+### Причина
+
+Backstage по умолчанию добавляет `prompt=none` к OAuth2 authorize-запросу, когда `prompt:` не задан в конфиге. Authentik при `prompt=none` немедленно возвращает `login_required`, если у пользователя нет активной сессии.
+
+Проверка:
 ```bash
-kubectl logs -n backstage deployment/backstage --tail=50 | grep -i 'resolver\|sign.in\|email'
+curl -sv "http://89.108.100.41:7007/api/auth/oidc/start?env=production" 2>&1 | grep Location
+# → &prompt=none& в URL редиректа на Authentik
 ```
 
-### Гипотеза B — Кэш браузера
+### Попытка — prompt: login
 
-Пользователь получает старый `main.js` / `module-backstage.js` из кэша. Файлы имеют content-hash в именах, но содержимое изменилось без смены хэша → браузер отдаёт старый файл.
+Добавление `prompt: login` в `app-config.auth.yaml` вызвало бесконечный цикл: после успешного логина Authentik с `prompt=login` redirect обратно с кодом авторизации → Backstage снова открывает `/authorize?prompt=login` → Authentik снова показывает форму логина → бесконечно.
 
-**Проверка:** открыть в инкогнито + DevTools → Network → Disable cache.
+Причина: Authentik всегда инициирует новый authentication flow при `prompt=login`, не проверяя наличие существующей сессии.
 
-### Гипотеза C — postMessage origin mismatch
+### Исправление — prompt: select_account
 
-`sendWebMessageResponse` отправляет второе сообщение с target origin `appOrigin`. Если `appOrigin` не совпадает с `window.location.origin` (например, `http://localhost:7007` vs `http://backstage.idp.local:7007`), браузер блокирует доставку.
-
-**Проверка:**
-```bash
-# Что установлено как appOrigin в OIDC handler:
-kubectl logs -n backstage deployment/backstage | grep 'origin'
+```yaml
+# platform/backstage/app-config.auth.yaml
+oidc:
+  production:
+    metadataUrl: ...
+    clientId: backstage
+    clientSecret: ${OAUTH_CLIENT_SECRET}
+    prompt: select_account   # ← добавлено
+    signIn:
+      resolvers:
+        - resolver: emailMatchingUserEntityProfileEmail
 ```
+
+`select_account` — интерактивный prompt, позволяющий выбрать/ввести аккаунт без принудительной повторной аутентификации на каждый запрос. Authentik корректно обрабатывает его как "показать форму логина, если нет сессии; если есть — предложить выбор аккаунта".
+
+Это **config-only изменение** — новый Docker-образ не требуется, достаточно перезапуска Backstage через ArgoCD.
 
 ---
 
-## Что нужно сделать дальше
+## Итоговые изменения
 
-1. **Проверить resolver:** добавить fallback resolver `allowedUsernamesByEnvironment` или `emailLocalPartMatchingUserEntityName` в `app-config.auth.yaml`
-2. **Проверить origin:** убедиться что `app.baseUrl` и Authentik redirect URI используют `http://backstage.idp.local:7007`
-3. **Добавить User entity** для `akadmin` в catalog или сменить resolver на `usernameMatchingUserEntityAnnotation`
-4. **Проверить кэш:** открыть в инкогнито с `Disable Cache` в DevTools
+### Файлы конфигурации
 
----
+| Файл | Что изменено |
+|------|-------------|
+| `platform/backstage/helm-values.yaml` | `service.type: LoadBalancer`; `backend.csp.upgrade-insecure-requests: false`; image tag до `phase-4-task-4-6-r8` |
+| `platform/backstage/app-config.auth.yaml` | `guest: null`; `app.signInPage: oidc`; `prompt: select_account`; добавлен resolver |
+| `platform/backstage/app-config.catalog.yaml` | Добавлен `User` в allowed kinds |
+| `catalog/all-components.yaml` | Добавлена User entity для `akadmin` (email `root@example.com`) |
+| `platform/backstage/Dockerfile` | Патч backend (OIDC provider module); патч frontend (guest Component → OIDC popup, B loader → OIDC refresh, rename + html patch) |
 
-## Образы
+### Docker образы
 
 | Tag | Что изменено |
 |-----|-------------|
 | `phase-4-task-4-6-r1` | Исходный образ |
 | `phase-4-task-4-6-r2` | Патч `providers:["oidc"]` → белый экран |
 | `phase-4-task-4-6-r3` | Патч guest Component с popup (без postMessage) |
-| `phase-4-task-4-6-r4` | Патч guest Component с popup + postMessage listener |
+| `phase-4-task-4-6-r4` | Патч guest Component с popup + postMessage (nested payload) |
+| `phase-4-task-4-6-r5` | Исправление postMessage payload (`d.response || d`) |
+| `phase-4-task-4-6-r6` | Попытка cache bust через query param в index.html — не сработало |
+| `phase-4-task-4-6-r7` | Rename + patch index.html — не сработало (app-backend игнорирует index.html) |
+| `phase-4-task-4-6-r8` | Rename + patch index.html **и** index.html.tmpl — **работает** |
+
+---
 
 ## Конфигурация /etc/hosts (браузер пользователя)
 
 ```
 89.108.100.41   backstage.idp.local
-89.108.100.218  authentik-server.authentik.svc.cluster.local
 ```
+
+Authentik доступен напрямую по IP: `http://89.108.100.218:80`

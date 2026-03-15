@@ -19,6 +19,39 @@
 - [ARCHITECTURE_OVERVIEW.md](ARCHITECTURE_OVERVIEW.md)
 - [../OPERATIONS_CHECKLIST.md](../OPERATIONS_CHECKLIST.md)
 
+## 0. Вход в Backstage (OIDC логин)
+
+### Требования перед первым входом
+
+В `/etc/hosts` браузера (или рабочей машины пользователя) должны быть:
+
+```
+89.108.100.41   backstage.idp.local
+89.108.100.218  authentik-server.authentik.svc.cluster.local
+```
+
+Обе строки нужны. Backstage делает OIDC redirect на Authentik по internal DNS-имени из метаданных (`authentik-server.authentik.svc.cluster.local`), поэтому браузер должен уметь резолвить это имя.
+
+### Как войти
+
+1. Открыть `http://backstage.idp.local:7007`
+2. Нажать **"Sign in with OIDC"**
+3. В popup: логин `akadmin`, пароль `Admin1234!`
+4. После успешного логина popup закрывается и Backstage открывается
+
+### Если кнопка не появляется / появляется "Enter as a Guest"
+
+Очистить кэш браузера (или открыть в режиме инкогнито с отключённым кэшем в DevTools). JavaScript-файл с логикой логина кэшируется браузером на 2 недели.
+
+### OIDC архитектурные особенности этой установки
+
+- Backstage 1.48.0 (prebuilt image) имеет sign-in page, захардкоженную в скомпилированном JS. Конфигурация через `app.signInPage: oidc` в app-config **не работает** в этом образе.
+- OIDC логин реализован через патч `module-backstage.oidcpatch.js` в Dockerfile: guest Component заменён на OIDC popup, B-loader — на проверку сессии через `/api/auth/oidc/refresh`.
+- Authentik использует `prompt: select_account`. **Не использовать `prompt: login`** — вызывает бесконечный цикл переаутентификации.
+- Resolver: `emailMatchingUserEntityProfileEmail` — User entity `akadmin` (email `root@example.com`) должна присутствовать в Backstage catalog.
+
+---
+
 ## 1. Что Backstage делает в этой платформе
 
 Backstage здесь полезен как:
