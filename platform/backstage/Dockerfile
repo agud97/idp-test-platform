@@ -27,3 +27,18 @@ if (source.includes(addition)) {
 }
 fs.writeFileSync(path, source.replace(needle, `${needle}\n${addition}`));
 NODE
+
+# Patch frontend: replace hardcoded guest sign-in page with oidc
+RUN node - <<'NODE'
+const fs = require('fs');
+const dir = '/app/packages/app/dist/static';
+const files = fs.readdirSync(dir).filter(f => f.startsWith('main.') && f.endsWith('.js') && !f.endsWith('.map'));
+if (files.length === 0) throw new Error('main.js not found in ' + dir);
+const file = dir + '/' + files[0];
+const src = fs.readFileSync(file, 'utf8');
+const from = 'auto:!0,providers:["guest"]';
+const to   = 'auto:!0,providers:["oidc"]';
+if (!src.includes(from)) { console.log('already patched or pattern not found, skipping'); process.exit(0); }
+fs.writeFileSync(file, src.replace(from, to));
+console.log('patched', file);
+NODE
