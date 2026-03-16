@@ -13,7 +13,7 @@ report progress at checkpoints.
 ## Directory Structure
 
 ```
-docs/                            # READ-ONLY — Do not modify during implementation
+docs/                            # Normative/spec docs; modify only when the task explicitly requires spec/doc alignment
   requirements.md                # Functional requirements, NFRs, constraints (FR/NFR/C IDs)
   acceptance_criteria.md         # Behavioral specs in WHEN-THEN-SHALL format (AC IDs)
   constraints.md                 # Architecture rules, patterns, technical decisions
@@ -47,6 +47,7 @@ docs/                            # READ-ONLY — Do not modify during implementa
   plan.yaml                      # Execution plan: 5 phases, 30 tasks with dependencies
   spec-review.md                 # Spec review findings (18 issues, all resolved)
   spec-review-changes.md         # Change report: before/why/what/after for each fix
+  NORMATIVE_CHANGE_REGISTRY.md   # History of meaningful normative document changes; update when normative meaning changes
 
 docs/status.md                   # Progress tracking — YOU create and update this file
 ```
@@ -76,7 +77,10 @@ When starting work on a feature:
    → Determine current position in plan
    → If file doesn't exist, create it with phase-1, task-1.1 as NOT_STARTED
 
-5. SET current_task = first task with status NOT_STARTED
+5. READ docs/NORMATIVE_CHANGE_REGISTRY.md
+   → Understand recent normative/spec changes that may affect current work
+
+6. SET current_task = first task with status NOT_STARTED
 ```
 
 ### Main Execution Loop
@@ -350,11 +354,12 @@ Respond with:
 - Verify all prerequisites before starting a task
 - Validate all acceptance criteria before marking complete
 - Update `docs/status.md` after each task state change
+- Update `docs/NORMATIVE_CHANGE_REGISTRY.md` in the same change whenever normative meaning changes in `requirements.md`, `constraints.md`, `acceptance_criteria.md`, `plan.yaml`, `use_cases.md`, or `docs/use_cases/*`
 - Stop at every checkpoint and wait for approval
 - Stop immediately when blocked
 
 ### MUST NOT
-- Modify files in `docs/` directory (except `docs/status.md`)
+- Modify normative files in `docs/` casually or without necessity
 - Skip tasks or reorder tasks within a phase
 - Proceed past checkpoint without explicit approval
 - Proceed when blocked without resolution
@@ -365,6 +370,7 @@ Respond with:
 - Reference constraint IDs (e.g. §2.1, BLK-001) when applying rules from `docs/constraints.md`
 - Reference AC IDs when validating behavior against `docs/acceptance_criteria.md`
 - Record reasoning for non-obvious implementation decisions in `docs/status.md`
+- When normative docs are updated, add a concise row to `docs/NORMATIVE_CHANGE_REGISTRY.md` describing what changed, why, and which commit is the audit source
 - Note potential improvements discovered during implementation
 
 ---
