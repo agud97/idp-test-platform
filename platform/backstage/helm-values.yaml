@@ -24,6 +24,9 @@ backstage:
       baseUrl: http://backstage.idp.local:7007
     backend:
       baseUrl: http://backstage.idp.local:7007
+      reading:
+        allow:
+          - host: raw.githubusercontent.com
       csp:
         upgrade-insecure-requests: false
       headers:
