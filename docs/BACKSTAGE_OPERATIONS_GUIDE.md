@@ -594,7 +594,7 @@ http://localhost:7007/docs
 - наличие `New Environment`
 
 Если template не виден:
-- возможно, проблема в static catalog registration
+- возможно, проблема в Git-backed catalog registration или refresh каталога
 - проверь template registration artifacts:
   - [../templates/new-environment/template.yaml](../templates/new-environment/template.yaml)
   - [../catalog/all-components.yaml](../catalog/all-components.yaml)

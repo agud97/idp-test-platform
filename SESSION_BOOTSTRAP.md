@@ -67,6 +67,7 @@ Do not assume this repo contains a normal live Backstage source monorepo.
 In this project:
 - Backstage runs from a prebuilt image
 - runtime wiring lives under `platform/backstage/`
+- scaffolder template discovery is Git-backed via catalog URL locations, not image-baked `/app/templates`
 - source artifacts under `packages/backend/...` and `packages/app/...` exist for spec traceability, but live behavior is wired through the image/runtime path
 
 ### 3. Phase 2.7 is mandatory context

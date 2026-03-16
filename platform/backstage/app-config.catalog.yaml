@@ -6,8 +6,8 @@ backstage:
           token: ${GITHUB_TOKEN}
     catalog:
       locations:
-        - type: file
-          target: /app/catalog/all-components.yaml
+        - type: url
+          target: https://github.com/agud97/idp-test-platform/blob/feature/phase-1-foundation/catalog/all-components.yaml
           rules:
             - allow:
                 - Component

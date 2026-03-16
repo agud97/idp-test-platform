@@ -74,7 +74,7 @@
 
 Сейчас:
 - это отражено в constraints и task scope
-- статическая/file-backed catalog registration теперь часть ожидаемого решения
+- Git-backed catalog registration теперь часть ожидаемого решения
 
 Итог:
 - новый агент не должен заново упираться в hidden template problem

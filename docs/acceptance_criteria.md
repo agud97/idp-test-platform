@@ -291,9 +291,9 @@
 ## 9. Environment Templates
 
 ### AC-045 · Define template — happy path
-**WHEN** a team lead submits a valid environment template with a unique name in Backstage
-**THEN** the system validates and saves the template
-**SHALL** the template appear in the Backstage scaffolder and be selectable by all team members immediately
+**WHEN** a team lead commits a valid environment template with a unique name to the GitOps repository and Backstage refreshes its catalog
+**THEN** the system validates and discovers the template
+**SHALL** the template appear in the Backstage scaffolder and be selectable by all team members without rebuilding the Backstage image
 
 ### AC-046 · Define template — duplicate name
 **WHEN** a team lead submits a template with a name that already exists

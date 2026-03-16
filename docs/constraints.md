@@ -287,7 +287,9 @@ The backend plugin **MUST** be implemented as a Backstage backend plugin at `pac
 
 **MUST** treat this repository's Backstage distribution as a prebuilt-image deployment, not a full source monorepo. If `packages/backend/` or `packages/app/` source artifacts are not part of the live build graph, the live behavior **MUST** be wired through the image build/runtime integration under `platform/backstage/` while preserving the specified source-artifact files for traceability and spec compliance.
 
-**MUST** register scaffolder templates through the static Backstage catalog configuration that the running image actually ingests. Placing a template file under `templates/` alone is insufficient; the template **MUST** be reachable through `catalog.locations` or an equivalent file-backed catalog registration path packaged into the image.
+**MUST** register scaffolder templates through a Git-backed Backstage catalog location that the running portal reads at runtime. Placing a template file under `templates/` alone is insufficient; the template **MUST** be reachable through `catalog.locations` or a `kind: Location` entity whose target points to the Git-hosted template URL.
+
+**MUST NOT** treat image-baked `/app/templates/...` files as the source of truth for scaffolder template discovery. The running portal **MUST** be able to observe template changes after a Git commit and catalog refresh without rebuilding the Backstage image.
 
 **MUST** use `spec.type: service` (not `environment`) for all environment catalog entries. In the prebuilt Backstage image, the Kubernetes tab is only rendered for `spec.type: service` entities. Other types fall into a default layout with no Kubernetes tab. This means the scaffolder template skeleton (`templates/new-environment/skeleton/catalog-info.yaml`) and all catalog entries under `catalog/environments/` MUST use `type: service`.
 

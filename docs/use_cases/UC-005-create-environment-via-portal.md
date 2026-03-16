@@ -5,7 +5,7 @@
 **Use Case ID:** UC-005
 **Use Case Name:** Create Environment via Portal
 **Primary Actor:** Developer
-**Goal:** Provision a new test environment through the Backstage UI without writing YAML manually
+**Goal:** Provision a new test environment through the Backstage UI without writing YAML manually, using a template discovered live from the GitOps repository
 **Status:** Draft
 
 > **Note:** This use case includes UC-001 (Submit Environment Manifest) — the portal generates and commits the manifest on the developer's behalf.
@@ -13,13 +13,13 @@
 ## Preconditions
 
 - Developer is authenticated in the Backstage portal.
-- At least one environment template is available in the Backstage scaffolder.
+- At least one environment template is available in the Backstage scaffolder via the Git-backed Backstage catalog.
 - Developer has write access to the GitOps repository (Backstage acts on their behalf via a service token).
 
 ## Main Success Scenario
 
 1. Developer opens the Backstage portal and navigates to "Create" → "New Test Environment".
-2. System displays available environment templates.
+2. System displays available environment templates discovered from the Git-backed Backstage catalog.
 3. Developer selects an appropriate template.
 4. System displays a form with configurable parameters (environment name, component selections, configuration overrides).
 5. Developer fills in the form and submits.

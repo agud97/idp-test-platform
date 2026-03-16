@@ -824,11 +824,12 @@ plan:
             uses ${{ values.* }} substitution syntax, renders skeleton YAML
             at skeleton/environments/${{ values.team }}/${{ values.env_name }}.yaml,
             commits generated file to Git, and registers the new environment in
-            the catalog. Because this repository's Backstage runtime uses a
-            static/file-backed catalog, the task also includes whatever catalog
-            registration and runtime scaffolder action wiring is required so the
-            template is actually discoverable and can update the existing GitOps
-            branch safely.
+            the catalog. Because this repository's Backstage runtime must
+            discover templates live from Git, the task also includes whatever
+            catalog registration and runtime scaffolder action wiring is
+            required so the template is actually discoverable from the GitOps
+            repository without rebuilding the Backstage image and can update the
+            existing GitOps branch safely.
             Parameters must be typed (string/integer/boolean) and stored
             in template_yaml + parameters fields per entity_model.md.
           artifact: >

@@ -150,6 +150,7 @@ Backstage даёт пользователю portal interface для:
 Особенность реализации:
 - Backstage в репозитории был интегрирован через prebuilt image / runtime wiring, а не через полноценный source monorepo
 - Backstage 1.48.0 (prebuilt image) — sign-in page жёстко захардкожена в скомпилированном JS; guest login заменяется патчем в Dockerfile
+- scaffolder template и bootstrap catalog читаются live из Git-backed catalog URLs, а не из baked `/app/templates`
 - Backstage доступен по адресу `http://backstage.idp.local:7007` (LoadBalancer, port 7007)
 - `/etc/hosts` (браузер пользователя): `89.108.100.41 backstage.idp.local`
 - Authentik доступен по адресу `http://89.108.100.218:80`; браузеру также нужно: `89.108.100.218 authentik-server.authentik.svc.cluster.local` (OIDC redirect использует internal DNS name из метаданных)

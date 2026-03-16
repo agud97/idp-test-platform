@@ -35,7 +35,7 @@
 
 Изменения:
 - добавлено явное правило про prebuilt-image Backstage deployment
-- добавлено правило про обязательную static/file-backed catalog registration для scaffolder templates
+- добавлено правило про обязательную Git-backed catalog registration для scaffolder templates
 - обновлён minimal acceptance set для `AC-003`
 - уточнён minimal acceptance set для `AC-037`
 
@@ -45,7 +45,7 @@
 - это уже приводило к blockers на `task-4.4`, `task-4.5`, `task-4.6`
 
 - также шаблон в `templates/` сам по себе не discoverable для running Backstage
-- требовалась отдельная registration path через static catalog
+- требовалась отдельная registration path через Git-backed catalog location
 
 ### 3. [plan.yaml](plan.yaml)
 

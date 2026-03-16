@@ -47,16 +47,7 @@ apiVersion: backstage.io/v1alpha1
 kind: Location
 metadata:
   name: new-environment-template
-  description: Registers the self-service Backstage template for new IDP environments.
+  description: Registers the self-service Backstage template for new IDP environments from the GitOps repository.
 spec:
-  type: file
-  target: /app/templates/new-environment/template.yaml
----
-apiVersion: backstage.io/v1alpha1
-kind: Location
-metadata:
-  name: environment-catalog-entries
-  description: Auto-loads all environment catalog entries from catalog/environments/.
-spec:
-  type: file
-  target: /app/catalog/environments/*.yaml
+  type: url
+  target: https://github.com/agud97/idp-test-platform/blob/feature/phase-1-foundation/templates/new-environment/template.yaml

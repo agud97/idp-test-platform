@@ -7,8 +7,6 @@ RUN yarn add @backstage/plugin-auth-backend-module-oidc-provider@^0.4.2 sql.js@^
 WORKDIR /app
 
 COPY docs/runbooks /app/docs/runbooks
-COPY catalog /app/catalog
-COPY templates /app/templates
 COPY platform/backstage/custom-actions/gitops-repo-push-module.cjs /app/custom/gitops-repo-push-module.cjs
 COPY platform/backstage/custom-actions/migration-dashboard-module.cjs /app/custom/migration-dashboard-module.cjs
 COPY platform/backstage/custom-actions/techdocs-runbooks-module.cjs /app/custom/techdocs-runbooks-module.cjs
