@@ -19,6 +19,7 @@ spec:
       type: redis
       enabled: ${{ values.redis_enabled }}
       replicas: ${{ values.redis_replicas }}
+    {% if values.account_api_enabled %}
     - name: account-api
       type: webapp
       enabled: ${{ values.account_api_enabled }}
@@ -35,3 +36,4 @@ spec:
         PROMETHEUS_MULTIPROC_DIR: ${{ values.account_api_prometheus_multiproc_dir }}
         PUBLIC_HOST: ${{ values.account_api_public_host }}
         REGRU_MODE: ${{ values.account_api_regru_mode }}
+    {% endif %}

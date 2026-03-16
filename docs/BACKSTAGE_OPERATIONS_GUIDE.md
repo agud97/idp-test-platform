@@ -269,8 +269,8 @@ http://localhost:7007/create
 Практически форма теперь читается так:
 - шаг `Environment Details`
 - шаг `Service Selection`, где сервисы выбираются чекбоксами
+  и поля `account-api` появляются только если включён `account_api_enabled`
 - шаг `Base Service Settings`
-- шаг `Account API`
 
 Пример валидного ввода:
 

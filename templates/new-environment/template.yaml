@@ -51,6 +51,65 @@ spec:
           title: Enable account-api
           type: boolean
           default: false
+      dependencies:
+        account_api_enabled:
+          oneOf:
+            - properties:
+                account_api_enabled:
+                  const: false
+            - properties:
+                account_api_enabled:
+                  const: true
+                account_api_image_tag:
+                  title: account-api Image Tag
+                  type: string
+                  default: latest
+                account_api_replicas:
+                  title: account-api Replicas
+                  type: integer
+                  minimum: 0
+                  maximum: 50
+                  default: 1
+                account_api_app_db_name:
+                  title: account-api APP_DB_NAME
+                  type: string
+                  default: account
+                account_api_app_db_user:
+                  title: account-api APP_DB_USER
+                  type: string
+                  default: account_user
+                account_api_config_mode:
+                  title: account-api CONFIG_MODE
+                  type: string
+                  default: develop
+                account_api_db_hostname:
+                  title: account-api DB_HOSTNAME
+                  type: string
+                  default: database
+                account_api_db_username:
+                  title: account-api DB_USERNAME
+                  type: string
+                  default: root
+                account_api_out_path_conf:
+                  title: account-api OUT_PATH_CONF
+                  type: string
+                  default: /tmp/configs
+                account_api_path_to_conf:
+                  title: account-api PATH_TO_CONF
+                  type: string
+                  default: src/configs
+                account_api_prometheus_multiproc_dir:
+                  title: account-api PROMETHEUS_MULTIPROC_DIR
+                  type: string
+                  default: /tmp/metrics
+                account_api_public_host:
+                  title: account-api PUBLIC_HOST
+                  type: string
+                  default: http://public-cfg:5000
+                account_api_regru_mode:
+                  title: account-api REGRU_MODE
+                  type: string
+                  default: develop
     - title: Base Service Settings
       properties:
         webapp_image_tag:
@@ -69,58 +128,6 @@ spec:
           minimum: 0
           maximum: 50
           default: 1
-    - title: Account API
-      properties:
-        account_api_image_tag:
-          title: account-api Image Tag
-          type: string
-          default: latest
-        account_api_replicas:
-          title: account-api Replicas
-          type: integer
-          minimum: 0
-          maximum: 50
-          default: 1
-        account_api_app_db_name:
-          title: account-api APP_DB_NAME
-          type: string
-          default: account
-        account_api_app_db_user:
-          title: account-api APP_DB_USER
-          type: string
-          default: account_user
-        account_api_config_mode:
-          title: account-api CONFIG_MODE
-          type: string
-          default: develop
-        account_api_db_hostname:
-          title: account-api DB_HOSTNAME
-          type: string
-          default: database
-        account_api_db_username:
-          title: account-api DB_USERNAME
-          type: string
-          default: root
-        account_api_out_path_conf:
-          title: account-api OUT_PATH_CONF
-          type: string
-          default: /tmp/configs
-        account_api_path_to_conf:
-          title: account-api PATH_TO_CONF
-          type: string
-          default: src/configs
-        account_api_prometheus_multiproc_dir:
-          title: account-api PROMETHEUS_MULTIPROC_DIR
-          type: string
-          default: /tmp/metrics
-        account_api_public_host:
-          title: account-api PUBLIC_HOST
-          type: string
-          default: http://public-cfg:5000
-        account_api_regru_mode:
-          title: account-api REGRU_MODE
-          type: string
-          default: develop
   steps:
     - id: render-environment
       name: Render environment manifest
