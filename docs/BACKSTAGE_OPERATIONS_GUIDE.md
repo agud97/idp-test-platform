@@ -245,12 +245,12 @@ http://localhost:7007/create
 - `team`
 - `owner`
 - `webapp_enabled`
-- `webapp_image_tag`
-- `webapp_replicas`
 - `postgresql_enabled`
 - `redis_enabled`
-- `redis_replicas`
 - `account_api_enabled`
+- `webapp_image_tag`
+- `webapp_replicas`
+- `redis_replicas`
 - `account_api_image_tag`
 - `account_api_replicas`
 - `account_api_app_db_name`
@@ -265,6 +265,12 @@ http://localhost:7007/create
 - `account_api_regru_mode`
 
 ### Шаг 3. Заполнить форму
+
+Практически форма теперь читается так:
+- шаг `Environment Details`
+- шаг `Service Selection`, где сервисы выбираются чекбоксами
+- шаг `Base Service Settings`
+- шаг `Account API`
 
 Пример валидного ввода:
 

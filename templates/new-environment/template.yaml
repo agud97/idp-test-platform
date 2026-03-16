@@ -33,12 +33,26 @@ spec:
           type: string
           description: Backstage entity ref such as user:default/dev-alice or group:default/platform.
           default: group:default/platform
-    - title: Component Selection
+    - title: Service Selection
       properties:
         webapp_enabled:
           title: Enable Webapp
           type: boolean
           default: true
+        postgresql_enabled:
+          title: Enable PostgreSQL
+          type: boolean
+          default: true
+        redis_enabled:
+          title: Enable Redis
+          type: boolean
+          default: false
+        account_api_enabled:
+          title: Enable account-api
+          type: boolean
+          default: false
+    - title: Base Service Settings
+      properties:
         webapp_image_tag:
           title: Webapp Image Tag
           type: string
@@ -49,14 +63,6 @@ spec:
           minimum: 0
           maximum: 50
           default: 1
-        postgresql_enabled:
-          title: Enable PostgreSQL
-          type: boolean
-          default: true
-        redis_enabled:
-          title: Enable Redis
-          type: boolean
-          default: false
         redis_replicas:
           title: Redis Replicas
           type: integer
@@ -65,10 +71,6 @@ spec:
           default: 1
     - title: Account API
       properties:
-        account_api_enabled:
-          title: Enable account-api
-          type: boolean
-          default: false
         account_api_image_tag:
           title: account-api Image Tag
           type: string
