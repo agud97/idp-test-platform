@@ -62,3 +62,20 @@ Whenever a commit changes normative intent, constraints, required behavior, or t
 5. state why the change was necessary
 
 Do not add rows for pure typo fixes unless they change meaning.
+
+## Entry Template
+
+Use this row template for future updates:
+
+```markdown
+| YYYY-MM-DD | `commit` | `requirements.md`, `constraints.md`, ... | One-sentence summary of the normative change. | One-sentence reason the change was necessary. |
+```
+
+## Writing Style
+
+- Use one row per logical normative change, not per file.
+- Prefer the commit that introduced the final accepted wording.
+- List only the normative files whose meaning changed.
+- In `Summary`, describe the behavioral or governance change, not the implementation detail.
+- In `Why`, explain the trigger: contradiction, live validation finding, design decision, or scope change.
+- If several commits are part of one change series, record the commit that best represents the final normative state and mention the broader series in `Summary` if needed.
