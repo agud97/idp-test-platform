@@ -47,11 +47,23 @@ func TestValidateUnknownConfigOverrideKey(t *testing.T) {
 
 	v := mustValidator(t)
 	manifest := validManifest()
-	manifest.Spec.Components[0].ConfigOverrides["UNKNOWN_KEY"] = "value"
+	manifest.Spec.Components[0].ConfigOverrides["bad-key"] = "value"
 
 	errs := v.Validate(manifest)
 	require.NotEmpty(t, errs)
-	require.Contains(t, joinedMessages(errs), `invalid key "UNKNOWN_KEY"`)
+	require.Contains(t, joinedMessages(errs), `invalid key "bad-key"`)
+}
+
+func TestValidateSensitiveConfigOverrideKey(t *testing.T) {
+	t.Parallel()
+
+	v := mustValidator(t)
+	manifest := validManifest()
+	manifest.Spec.Components[0].ConfigOverrides["DB_PASSWORD"] = "secret"
+
+	errs := v.Validate(manifest)
+	require.NotEmpty(t, errs)
+	require.Contains(t, joinedMessages(errs), `sensitive key "DB_PASSWORD"`)
 }
 
 func TestValidateInvalidImageTag(t *testing.T) {

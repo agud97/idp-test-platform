@@ -6,7 +6,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"net/url"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -21,6 +23,8 @@ const (
 )
 
 type composeConverter struct{}
+
+var sensitiveKeyPattern = regexp.MustCompile(`(?i)(PASSWORD|PASS|SECRET|TOKEN|PRIVATE_?KEY|ACCESS_?KEY|API_?KEY)`)
 
 func NewComposeConverter() ComposeConverter {
 	return &composeConverter{}
@@ -122,18 +126,20 @@ func loadProject(raw []byte) (*types.Project, error) {
 
 func mapService(service types.ServiceConfig) (Component, []string) {
 	componentType, enabled := detectComponentType(service)
+	configOverrides, configWarnings := extractEnvironment(service)
 	component := Component{
-		Name:     service.Name,
-		Type:     componentType,
-		Enabled:  enabled,
-		ImageTag: extractImageTag(service.Image),
+		Name:            service.Name,
+		Type:            componentType,
+		Enabled:         enabled,
+		ImageTag:        extractImageTag(service.Image),
+		ConfigOverrides: configOverrides,
 	}
 
 	replicas := int32(1)
 	component.Replicas = &replicas
-	component.ConfigOverrides = extractEnvironment(service)
 
 	var warnings []string
+	warnings = append(warnings, configWarnings...)
 
 	if !enabled {
 		warnings = append(warnings, fmt.Sprintf("service %q disabled: TODO no matching component type found", service.Name))
@@ -182,21 +188,57 @@ func extractImageTag(image string) string {
 	return ""
 }
 
-func extractEnvironment(service types.ServiceConfig) map[string]string {
+func extractEnvironment(service types.ServiceConfig) (map[string]string, []string) {
 	if len(service.Environment) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	values := map[string]string{}
+	var warnings []string
 	for key, value := range service.Environment {
+		actual := ""
 		if value == nil {
-			values[key] = ""
+			actual = ""
+		} else {
+			actual = *value
+		}
+
+		if isSensitiveConfig(key, actual) {
+			warnings = append(warnings, fmt.Sprintf("service %q config %q omitted from manifest: manual re-entry required", service.Name, key))
 			continue
 		}
-		values[key] = *value
+
+		values[key] = actual
 	}
 
-	return values
+	if len(values) == 0 {
+		return nil, warnings
+	}
+
+	return values, warnings
+}
+
+func isSensitiveConfig(key, value string) bool {
+	if IsSensitiveConfigKey(key) {
+		return true
+	}
+
+	return HasCredentialURL(value)
+}
+
+func IsSensitiveConfigKey(key string) bool {
+	return sensitiveKeyPattern.MatchString(strings.TrimSpace(key))
+}
+
+func HasCredentialURL(value string) bool {
+	parsed, err := url.Parse(value)
+	if err != nil || parsed.User == nil {
+		return false
+	}
+
+	username := parsed.User.Username()
+	password, hasPassword := parsed.User.Password()
+	return username != "" || (hasPassword && password != "")
 }
 
 func extractPorts(service types.ServiceConfig) []int32 {

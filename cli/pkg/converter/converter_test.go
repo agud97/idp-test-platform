@@ -116,6 +116,30 @@ func TestSimpleComposeMatchesExpectedFixture(t *testing.T) {
 	require.Equal(t, strings.TrimSpace(string(expected)), strings.TrimSpace(string(rendered)))
 }
 
+func TestConvertOmitsSensitiveEnvironmentValues(t *testing.T) {
+	t.Parallel()
+
+	input := []byte(`
+services:
+  api:
+    image: ghcr.io/example/api:v1.0.0
+    environment:
+      LOG_LEVEL: debug
+      DB_PASSWORD: supersecret
+      REDIS_URL: redis://:password@redis:6379/0
+`)
+
+	converter := NewComposeConverter()
+	manifest, report, err := converter.Convert(bytes.NewReader(input))
+	require.NoError(t, err)
+	require.Len(t, manifest.Spec.Components, 1)
+	require.Equal(t, map[string]string{
+		"LOG_LEVEL": "debug",
+	}, manifest.Spec.Components[0].ConfigOverrides)
+	require.Contains(t, strings.Join(report.Warnings, "\n"), `config "DB_PASSWORD" omitted from manifest`)
+	require.Contains(t, strings.Join(report.Warnings, "\n"), `config "REDIS_URL" omitted from manifest`)
+}
+
 func mustReadFile(t *testing.T, rel string) []byte {
 	t.Helper()
 

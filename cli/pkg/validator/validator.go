@@ -18,12 +18,8 @@ import (
 )
 
 var imageTagPattern = regexp.MustCompile(`^[A-Za-z0-9_][A-Za-z0-9._-]{0,127}$`)
-
-var knownConfigKeys = map[string]map[string]struct{}{
-	"webapp": keys("APP_NAME", "APP_ENV", "LOG_LEVEL", "DB_HOST", "DB_NAME", "DB_USER", "FEATURE_FLAG", "QUEUE_NAME"),
-	"postgresql": keys("POSTGRES_DB", "POSTGRES_USER"),
-	"redis": keys("REDIS_PASSWORD"),
-}
+var configKeyPattern = regexp.MustCompile(`^[A-Z][A-Z0-9_]*$`)
+var sensitiveConfigKeyPattern = regexp.MustCompile(`(?i)(PASSWORD|PASS|SECRET|TOKEN|PRIVATE_?KEY|ACCESS_?KEY|API_?KEY)`)
 
 type environmentValidator struct {
 	schemaValidator apivalidation.SchemaValidator
@@ -39,7 +35,7 @@ func NewEnvironmentValidator() (EnvironmentValidator, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read environment crd: %w", err)
 	}
- 
+
 	var crdV1 apiextensionsv1.CustomResourceDefinition
 	if err := yaml.Unmarshal(raw, &crdV1); err != nil {
 		return nil, fmt.Errorf("unmarshal environment crd: %w", err)
@@ -184,27 +180,20 @@ func validateConfigOverrideKeys(manifest *converter.EnvironmentManifest) []Valid
 		if len(component.ConfigOverrides) == 0 {
 			continue
 		}
-		allowed, ok := knownConfigKeys[component.Type]
-		if !ok {
-			continue
-		}
 		for key := range component.ConfigOverrides {
-			if _, exists := allowed[key]; exists {
-				continue
+			switch {
+			case !configKeyPattern.MatchString(key):
+				out = append(out, ValidationError{
+					Path:    fmt.Sprintf("spec.components[%d].configOverrides.%s", i, key),
+					Message: fmt.Sprintf("invalid key %q for component type %q", key, component.Type),
+				})
+			case sensitiveConfigKeyPattern.MatchString(key):
+				out = append(out, ValidationError{
+					Path:    fmt.Sprintf("spec.components[%d].configOverrides.%s", i, key),
+					Message: fmt.Sprintf("sensitive key %q is not allowed in configOverrides for component type %q", key, component.Type),
+				})
 			}
-			out = append(out, ValidationError{
-				Path:    fmt.Sprintf("spec.components[%d].configOverrides.%s", i, key),
-				Message: fmt.Sprintf("invalid key %q for component type %q", key, component.Type),
-			})
 		}
-	}
-	return out
-}
-
-func keys(values ...string) map[string]struct{} {
-	out := make(map[string]struct{}, len(values))
-	for _, value := range values {
-		out[value] = struct{}{}
 	}
 	return out
 }

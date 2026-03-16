@@ -52,7 +52,7 @@ func TestIntegrationFullPipeline(t *testing.T) {
 func TestIntegrationMappingAccuracy(t *testing.T) {
 	t.Parallel()
 
-rawCompose := []byte(`
+	rawCompose := []byte(`
 services:
   postgres:
     image: postgres:16
@@ -130,15 +130,15 @@ volumes:
 	}
 
 	expectedTypes := map[string]string{
-		"web":       "webapp",
-		"frontend":  "webapp",
-		"api":       "webapp",
-		"backend":   "webapp",
-		"postgres":  "postgresql",
-		"redis":     "redis",
-		"gateway":   "webapp",
+		"web":            "webapp",
+		"frontend":       "webapp",
+		"api":            "webapp",
+		"backend":        "webapp",
+		"postgres":       "postgresql",
+		"redis":          "redis",
+		"gateway":        "webapp",
 		"worker-backend": "webapp",
-		"admin-api": "webapp",
+		"admin-api":      "webapp",
 	}
 
 	var correctlyMapped int
@@ -169,6 +169,9 @@ volumes:
 			serviceFailures = append(serviceFailures, fmt.Sprintf("ports=%v", report.ServicePorts[service.Name]))
 		}
 		for key, value := range service.Environment {
+			if isSensitiveEnvForTest(key, value) {
+				continue
+			}
 			actualValue, ok := component.ConfigOverrides[key]
 			if !ok {
 				serviceFailures = append(serviceFailures, fmt.Sprintf("missing env key %s", key))
@@ -200,6 +203,16 @@ volumes:
 
 	require.GreaterOrEqualf(t, correctlyMapped, 9, "correctly mapped=%d failures=%v", correctlyMapped, failures)
 	require.Emptyf(t, failures, "mapping failures: %v", failures)
+}
+
+func isSensitiveEnvForTest(key string, value *string) bool {
+	if converter.IsSensitiveConfigKey(key) {
+		return true
+	}
+	if value == nil {
+		return false
+	}
+	return converter.HasCredentialURL(*value)
 }
 
 func TestIntegrationRetentionExpiry(t *testing.T) {
