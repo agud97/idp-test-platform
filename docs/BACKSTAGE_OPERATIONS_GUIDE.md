@@ -250,6 +250,19 @@ http://localhost:7007/create
 - `postgresql_enabled`
 - `redis_enabled`
 - `redis_replicas`
+- `account_api_enabled`
+- `account_api_image_tag`
+- `account_api_replicas`
+- `account_api_app_db_name`
+- `account_api_app_db_user`
+- `account_api_config_mode`
+- `account_api_db_hostname`
+- `account_api_db_username`
+- `account_api_out_path_conf`
+- `account_api_path_to_conf`
+- `account_api_prometheus_multiproc_dir`
+- `account_api_public_host`
+- `account_api_regru_mode`
 
 ### Шаг 3. Заполнить форму
 
@@ -264,6 +277,19 @@ http://localhost:7007/create
 - `postgresql_enabled`: `true`
 - `redis_enabled`: `false`
 - `redis_replicas`: `1`
+- `account_api_enabled`: `true`
+- `account_api_image_tag`: `latest`
+- `account_api_replicas`: `1`
+- `account_api_app_db_name`: `account`
+- `account_api_app_db_user`: `account_user`
+- `account_api_config_mode`: `develop`
+- `account_api_db_hostname`: `database`
+- `account_api_db_username`: `root`
+- `account_api_out_path_conf`: `/tmp/configs`
+- `account_api_path_to_conf`: `src/configs`
+- `account_api_prometheus_multiproc_dir`: `/tmp/metrics`
+- `account_api_public_host`: `http://public-cfg:5000`
+- `account_api_regru_mode`: `develop`
 
 ### Шаг 4. Submit
 
@@ -298,6 +324,51 @@ http://localhost:7007/create
 - Backstage не деплоит в кластер напрямую
 - он делает Git commit
 - дальше всё делает GitOps chain
+
+### Практический пример: что именно попадёт в manifest для `account-api`
+
+Если в форме включить PostgreSQL, Redis и `account-api`, то template сгенерирует
+в `components[]` примерно такую часть:
+
+```yaml
+- name: database
+  type: postgresql
+  enabled: true
+
+- name: cache
+  type: redis
+  enabled: true
+  replicas: 1
+
+- name: account-api
+  type: webapp
+  enabled: true
+  imageTag: latest
+  replicas: 1
+  configOverrides:
+    APP_DB_NAME: account
+    APP_DB_USER: account_user
+    CONFIG_MODE: develop
+    DB_HOSTNAME: database
+    DB_USERNAME: root
+    OUT_PATH_CONF: /tmp/configs
+    PATH_TO_CONF: src/configs
+    PROMETHEUS_MULTIPROC_DIR: /tmp/metrics
+    PUBLIC_HOST: http://public-cfg:5000
+    REGRU_MODE: develop
+```
+
+Смысл механизма такой:
+- пользователь меняет поля в Backstage form
+- template рендерит Git-managed `Environment` manifest
+- ArgoCD подхватывает commit
+- Crossplane создаёт `account-api` как обычный `webapp`
+
+Ограничения текущего template:
+- парольные переменные через форму не заводятся
+- `DB_PASSWORD`, `APP_DB_PASS`, `REDIS_URL` с password должны оставаться вне Git
+- через текущую форму задаётся `imageTag`, но не `imageRepository`
+- если нужен нестандартный image repository, manifest потом лучше доработать в Git
 
 ## 8. Что проверить после создания через Backstage
 

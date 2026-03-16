@@ -229,6 +229,80 @@ spec:
 
 ## 6. Как выбрать правильные поля для каждого приложения
 
+## 5.1 Практический пример: добавить `account-api`
+
+Ниже не новый component type, а обычный `webapp`-компонент.
+
+Когда этот пример подходит:
+- `account-api` должен жить как обычный `Deployment`
+- ему подходит существующий `type: webapp`
+- PostgreSQL и Redis описываются как отдельные platform components
+- пароли и secret-like значения не коммитятся в `configOverrides`
+
+Минимальный пример environment manifest:
+
+```yaml
+apiVersion: idp.platform.io/v1alpha1
+kind: Environment
+metadata:
+  name: account-smoke
+spec:
+  owner: group:default/platform
+  team: accounts
+  components:
+    - name: database
+      type: postgresql
+      enabled: true
+
+    - name: cache
+      type: redis
+      enabled: true
+      replicas: 1
+
+    - name: account-api
+      type: webapp
+      enabled: true
+      imageRepository: ghcr.io/acme/account-api
+      imageTag: latest
+      replicas: 1
+      configOverrides:
+        APP_DB_NAME: account
+        APP_DB_USER: account_user
+        CONFIG_MODE: develop
+        DB_HOSTNAME: database
+        DB_USERNAME: root
+        OUT_PATH_CONF: /tmp/configs
+        PATH_TO_CONF: src/configs
+        PROMETHEUS_MULTIPROC_DIR: /tmp/metrics
+        PUBLIC_HOST: http://public-cfg:5000
+        REGRU_MODE: develop
+```
+
+Что важно в этом примере:
+- `database` и `cache` — это platform-managed зависимости в том же environment
+- `DB_HOSTNAME: database` указывает на компонент PostgreSQL внутри этого environment
+- пароль для БД не хранится в Git и не попадает в `configOverrides`
+- `REDIS_URL` с embedded password тоже не хранится в Git
+
+Практический workflow:
+
+1. Открой `environments/<team>/<env>.yaml` или создай новый manifest.
+2. Добавь `database`, `cache` и `account-api` в `spec.components[]`.
+3. Укажи реальный `imageRepository`, если хочешь запускать не default image.
+4. Оставь только безопасные env vars в `configOverrides`.
+5. Закоммить manifest.
+6. Проверь generated Argo Application, `Environment` claim и runtime resources.
+
+Что не нужно делать:
+- не создавать новый `type: account-api`
+- не коммитить `DB_PASSWORD`, `APP_DB_PASS`, `REDIS_URL` с паролем
+- не пытаться описывать legacy `docker-compose` networks как platform field
+- не рассчитывать на hostPath-like volume mounts без отдельной platform доработки
+
+Если тебе нужен именно наглядный onboarding-пример для команды, то `account-api`
+можно считать каноническим образцом "как добавить ещё один webapp с
+PostgreSQL/Redis-зависимостями, не меняя платформу".
+
 ### `name`
 
 Должно быть:

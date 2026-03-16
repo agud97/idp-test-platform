@@ -102,6 +102,11 @@
 `type: webapp`:
 - читай [ADDING_MULTIPLE_WEBAPPS.md](docs/ADDING_MULTIPLE_WEBAPPS.md)
 
+Если нужен конкретный пример добавления нового `webapp`-компонента на базе
+`account-api`, включая PostgreSQL/Redis-зависимости и safe `configOverrides`:
+- смотри раздел `Практический пример: добавить account-api` в
+  [ADDING_MULTIPLE_WEBAPPS.md](docs/ADDING_MULTIPLE_WEBAPPS.md)
+
 Если нужен отдельный практический guide по тому, что именно можно делать через
 Backstage и как это использовать вместе с GitOps:
 - читай [BACKSTAGE_OPERATIONS_GUIDE.md](docs/BACKSTAGE_OPERATIONS_GUIDE.md)
