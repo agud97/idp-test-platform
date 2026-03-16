@@ -50,4 +50,4 @@ metadata:
   description: Registers the self-service Backstage template for new IDP environments from the GitOps repository.
 spec:
   type: url
-  target: https://github.com/agud97/idp-test-platform/blob/feature/phase-1-foundation/templates/new-environment/template.yaml
+  target: https://raw.githubusercontent.com/agud97/idp-test-platform/feature/phase-1-foundation/templates/new-environment/template.yaml
