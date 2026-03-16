@@ -52,6 +52,38 @@ spec:
           type: boolean
           default: false
       dependencies:
+        webapp_enabled:
+          oneOf:
+            - properties:
+                webapp_enabled:
+                  const: false
+            - properties:
+                webapp_enabled:
+                  const: true
+                webapp_image_tag:
+                  title: Webapp Image Tag
+                  type: string
+                  default: latest
+                webapp_replicas:
+                  title: Webapp Replicas
+                  type: integer
+                  minimum: 0
+                  maximum: 50
+                  default: 1
+        redis_enabled:
+          oneOf:
+            - properties:
+                redis_enabled:
+                  const: false
+            - properties:
+                redis_enabled:
+                  const: true
+                redis_replicas:
+                  title: Redis Replicas
+                  type: integer
+                  minimum: 0
+                  maximum: 50
+                  default: 1
         account_api_enabled:
           oneOf:
             - properties:
@@ -110,24 +142,6 @@ spec:
                   title: account-api REGRU_MODE
                   type: string
                   default: develop
-    - title: Base Service Settings
-      properties:
-        webapp_image_tag:
-          title: Webapp Image Tag
-          type: string
-          default: latest
-        webapp_replicas:
-          title: Webapp Replicas
-          type: integer
-          minimum: 0
-          maximum: 50
-          default: 1
-        redis_replicas:
-          title: Redis Replicas
-          type: integer
-          minimum: 0
-          maximum: 50
-          default: 1
   steps:
     - id: render-environment
       name: Render environment manifest
