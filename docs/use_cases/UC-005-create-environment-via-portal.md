@@ -21,7 +21,7 @@
 1. Developer opens the Backstage portal and navigates to "Create" → "New Test Environment".
 2. System displays available environment templates discovered from the Git-backed Backstage catalog.
 3. Developer selects an appropriate template.
-4. System displays a form with configurable parameters (environment name, component selections, configuration overrides).
+4. System displays a form with configurable parameters split into environment details and a unified service-selection step, where service checkboxes control whether component-specific settings and approved configuration override fields are shown.
 5. Developer fills in the form and submits.
 6. System validates the form input.
 7. System generates a valid environment YAML manifest from the template and form values.
@@ -72,7 +72,7 @@
 
 ### Success Postconditions
 
-- Environment manifest is committed to the GitOps repository.
+- Environment manifest is committed to the GitOps repository with the selected services and any approved per-environment override values rendered into the corresponding component blocks.
 - Environment entry is registered in the Backstage software catalog with owner and team metadata.
 - ArgoCD begins reconciling the environment (status transitions to `Progressing`).
 
@@ -95,3 +95,7 @@ Every environment created via the portal must have an `owner` (developer) and a 
 ### BR-003: Name Uniqueness
 
 Environment names must be unique per owner to prevent namespace collisions.
+
+### BR-004: Selected-Service Settings Only
+
+The portal must reveal component-specific settings only for services currently selected in the unified service-selection step. Disabled services must not require a separate wizard step.

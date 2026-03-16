@@ -20,7 +20,7 @@
 2. Team lead updates the Backstage catalog registration so the template is reachable through a Git-backed location.
 3. Team lead commits and pushes the template change to the GitOps branch.
 4. Backstage refreshes its catalog locations.
-5. System validates the template entity and parameter schema.
+5. System validates the template entity and parameter schema, including any conditional service-selection fields.
 6. System makes the template available in the Backstage scaffolder without a portal image rebuild.
 7. Team lead confirms successful publication by opening the new template in Backstage.
 
@@ -82,3 +82,7 @@ Any value that developers are expected to customise (environment name, image tag
 ### BR-004: Git-Backed Discoverability
 
 The template must be reachable through a Git/URL-backed Backstage catalog location. A template that exists only inside a built portal image is not sufficient.
+
+### BR-005: Scalable Service Selection
+
+Templates intended for multi-service environments should model service enablement as a unified selection step with conditional fields for enabled services, so the form remains usable as the number of supported services grows.

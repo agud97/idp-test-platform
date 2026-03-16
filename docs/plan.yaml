@@ -820,7 +820,10 @@ plan:
           description: >
             Write templates/new-environment/template.yaml — Backstage
             scaffolder template that: collects parameters (environment_name,
-            team, component selections with enabled toggle, imageTag overrides),
+            team, a unified service-selection step with enabled toggles,
+            conditional component settings for selected services, imageTag
+            overrides, and approved per-environment config override fields for
+            components such as account-api),
             uses ${{ values.* }} substitution syntax, renders skeleton YAML
             at skeleton/environments/${{ values.team }}/${{ values.env_name }}.yaml,
             commits generated file to Git, and registers the new environment in
@@ -843,7 +846,10 @@ plan:
             and submit. Verify: YAML file committed to environments/ in Git,
             catalog entry created, ArgoCD picks up the new environment
             (AC-020). Submit with empty required field → form shows
-            field-level error, nothing committed (AC-021).
+            field-level error, nothing committed (AC-021). Verify the form
+            exposes service enablement on a single step, only reveals settings
+            for selected services, and renders non-secret account-api
+            overrides into the generated manifest (AC-086, AC-087).
 
         - id: task-4.4
           name: "Migration dashboard: backend plugin"

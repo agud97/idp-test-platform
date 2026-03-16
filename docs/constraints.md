@@ -291,6 +291,12 @@ The backend plugin **MUST** be implemented as a Backstage backend plugin at `pac
 
 **MUST NOT** treat image-baked `/app/templates/...` files as the source of truth for scaffolder template discovery. The running portal **MUST** be able to observe template changes after a Git commit and catalog refresh without rebuilding the Backstage image.
 
+**MUST** model service enablement in the Backstage `New Environment` template as a unified service-selection step with boolean checkboxes for each optional service. Component-specific settings **MUST** be revealed conditionally for enabled services on that same step; the UX **MUST NOT** depend on one dedicated wizard step per service because the platform is expected to host many service types.
+
+**MUST** allow approved per-environment `configOverrides` for templated application components such as `account-api` through explicit Backstage form fields. These overrides **MUST** render into the generated Environment manifest for that specific environment only.
+
+**MUST NOT** expose secret or credential values (for example passwords or URLs with embedded credentials) as Backstage template parameters for component overrides. Such values **MUST** remain outside Git-committed manifests and follow the secret-handling rules in AC-018.
+
 **MUST** use `spec.type: service` (not `environment`) for all environment catalog entries. In the prebuilt Backstage image, the Kubernetes tab is only rendered for `spec.type: service` entities. Other types fall into a default layout with no Kubernetes tab. This means the scaffolder template skeleton (`templates/new-environment/skeleton/catalog-info.yaml`) and all catalog entries under `catalog/environments/` MUST use `type: service`.
 
 **MUST** add `backstage.io/kubernetes-label-selector` annotation to every environment catalog entry. The `isKubernetesAvailable` function in the prebuilt Backstage frontend checks for the presence of `backstage.io/kubernetes-id` **or** `backstage.io/kubernetes-label-selector`. Without one of these annotations, the Kubernetes tab is not rendered — even if `backstage.io/kubernetes-cluster` and `backstage.io/kubernetes-namespace` are set. Use `backstage.io/kubernetes-label-selector: idp.platform.io/team` (key-only selector matching all IDP-managed pods in the environment namespace). Required annotations for the Kubernetes tab to work:

@@ -156,7 +156,7 @@
 **SHALL** display "Environment name already exists. Choose a different name." and commit nothing to Git
 
 ### AC-023 · Create environment via portal — no templates available
-**WHEN** a developer navigates to "New Environment" and no templates have been published
+**WHEN** a developer navigates to "New Environment" and no templates are available from the Git-backed Backstage catalog
 **THEN** the system loads the creation wizard
 **SHALL** display "No templates available" and not present a broken or empty form
 
@@ -164,6 +164,16 @@
 **WHEN** a developer creates an environment from a template with specific parameter values
 **THEN** the system generates the YAML
 **SHALL** the committed manifest contain exactly the template structure with developer-supplied values substituted for all template parameters
+
+### AC-086 · Create environment via portal — unified service selection
+**WHEN** a developer opens the "New Environment" template form
+**THEN** the system renders the service-configuration portion of the form
+**SHALL** present service enablement as checkboxes on a single "Service Selection" step and reveal component-specific settings only for services whose checkbox is enabled
+
+### AC-087 · Create environment via portal — account-api overrides per environment
+**WHEN** a developer enables `account-api` and provides `account_api_*` override values in the Backstage form for a specific environment
+**THEN** the system generates the manifest
+**SHALL** render an `account-api` component whose `configOverrides` match the submitted non-secret values for that environment, while omitting password-like keys and other secret literals from the committed YAML
 
 ### AC-085 · Kubernetes tab visible on environment entity page
 **WHEN** a developer opens the catalog page of a deployed environment
@@ -296,18 +306,18 @@
 **SHALL** the template appear in the Backstage scaffolder and be selectable by all team members without rebuilding the Backstage image
 
 ### AC-046 · Define template — duplicate name
-**WHEN** a team lead submits a template with a name that already exists
+**WHEN** a team lead commits or updates a template in Git with a name that already exists and Backstage refreshes its catalog
 **THEN** the system validates the name
 **SHALL** display "A template with this name already exists" and not save the new template
 
 ### AC-047 · Define template — references unknown component type
-**WHEN** a team lead submits a template that references a component type not registered in the catalog
+**WHEN** a team lead commits a template to Git that references a component type not registered in the catalog and Backstage refreshes its catalog
 **THEN** the system validates the template body
 **SHALL** reject it with "Unknown component type: `<name>`" and save nothing
 
 ### AC-048 · Template update — no impact on existing environments
-**WHEN** a team lead updates an existing template
-**THEN** the system saves the new version
+**WHEN** a team lead updates an existing template in Git and Backstage refreshes its catalog
+**THEN** the system discovers the new version
 **SHALL** all environments previously created from the template continue running unchanged; the update applies only to new environments created after the update
 
 ---
