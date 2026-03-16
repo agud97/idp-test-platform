@@ -7,6 +7,7 @@
 - [OPERATIONS_CHECKLIST.md](OPERATIONS_CHECKLIST.md)
 - [docs/status.md](docs/status.md)
 - [docs/POST_IMPLEMENTATION_DOC_CHANGES.md](docs/POST_IMPLEMENTATION_DOC_CHANGES.md)
+- [docs/NORMATIVE_CHANGE_REGISTRY.md](docs/NORMATIVE_CHANGE_REGISTRY.md)
 - [docs/NEXT_AGENT_RISKS_AND_RESOLVED_BLOCKERS.md](docs/NEXT_AGENT_RISKS_AND_RESOLVED_BLOCKERS.md)
 - [SESSION_BOOTSTRAP.md](SESSION_BOOTSTRAP.md)
 - [docs/ADDING_NEW_PLATFORM_COMPONENT_TYPE.md](docs/ADDING_NEW_PLATFORM_COMPONENT_TYPE.md)
@@ -138,6 +139,9 @@ Backstage и как это использовать вместе с GitOps:
 Если нужно понять, какие исходные spec/plan формулировки были переписаны после реального исполнения:
 - читай [docs/POST_IMPLEMENTATION_DOC_CHANGES.md](docs/POST_IMPLEMENTATION_DOC_CHANGES.md)
 
+Если нужна хронология изменений нормативных документов с датами и commit hash:
+- читай [docs/NORMATIVE_CHANGE_REGISTRY.md](docs/NORMATIVE_CHANGE_REGISTRY.md)
+
 Если нужно понять, что следующий агент уже не должен расследовать заново, а что всё ещё остаётся внешним риском среды:
 - читай [docs/NEXT_AGENT_RISKS_AND_RESOLVED_BLOCKERS.md](docs/NEXT_AGENT_RISKS_AND_RESOLVED_BLOCKERS.md)
 
@@ -192,6 +196,8 @@ Backstage и как это использовать вместе с GitOps:
   - формальная история исполнения плана
 - [docs/POST_IMPLEMENTATION_DOC_CHANGES.md](docs/POST_IMPLEMENTATION_DOC_CHANGES.md)
   - что и почему было переписано в нормативных docs после исполнения
+- [docs/NORMATIVE_CHANGE_REGISTRY.md](docs/NORMATIVE_CHANGE_REGISTRY.md)
+  - реестр изменений нормативных документов с датами, commit hash и причиной изменений
 - [docs/NEXT_AGENT_RISKS_AND_RESOLVED_BLOCKERS.md](docs/NEXT_AGENT_RISKS_AND_RESOLVED_BLOCKERS.md)
   - какие blockers уже сняты, а какие риски останутся на новом кластере
 - [SESSION_BOOTSTRAP.md](SESSION_BOOTSTRAP.md)
